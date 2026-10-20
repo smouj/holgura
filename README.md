@@ -1,18 +1,18 @@
 <p align="center">
-  <img src="assets/logo.svg" width="104" height="104" alt="Cleaner" />
+  <img src="assets/logo.svg" width="104" height="104" alt="Holgura" />
 </p>
 
-<h1 align="center">Cleaner</h1>
+<h1 align="center">Holgura</h1>
 
 <p align="center">
-  <strong>See it. Understand it. Clean it.</strong><br/>
-  A Windows and WSL cleaner that shows you every file before it deletes anything.
+  <strong>Espacio para respirar.</strong><br/>
+  Limpiador para Windows y WSL que te enseña cada archivo antes de borrarlo.
 </p>
 
 <p align="center">
-  <a href="https://github.com/smouj/cleaner/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/smouj/cleaner/ci.yml?branch=main&label=build&logo=github"></a>
-  <a href="https://github.com/smouj/cleaner/releases"><img alt="Release" src="https://img.shields.io/github/v/release/smouj/cleaner?include_prereleases&label=release"></a>
-  <img alt="License" src="https://img.shields.io/github/license/smouj/cleaner">
+  <a href="https://github.com/smouj/holgura/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/smouj/holgura/ci.yml?branch=main&label=build&logo=github"></a>
+  <a href="https://github.com/smouj/holgura/releases"><img alt="Release" src="https://img.shields.io/github/v/release/smouj/holgura?label=release"></a>
+  <img alt="License" src="https://img.shields.io/github/license/smouj/holgura">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4">
   <img alt="Windows" src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4">
   <img alt="Privacy" src="https://img.shields.io/badge/telemetry-none-2ea44f">
@@ -20,142 +20,145 @@
 
 ---
 
-## Why another cleaner
+## Por qué otro limpiador
 
-Most Windows cleaners ask for trust and answer with a progress bar. This one answers with the file
-list: every category, its size, its location and the reason it can go.
+La mayoría pide confianza y devuelve una barra de progreso. Holgura devuelve la lista de archivos:
+cada categoría, su tamaño, su ruta y el motivo por el que puede irse.
 
-- Every deletion passes through a single gate that re-validates the root, the exclusions and the file.
-- Drive roots, `Windows`, `Program Files` and your user folders can never become a deletion root.
-- Junctions and reparse points are never followed.
-- A locked file is skipped and reported, never fatal.
-- Nothing is deleted until you press the button, and **Simular limpieza** shows the plan first.
+- Todo borrado pasa por una única puerta que revalida raíz, exclusiones y archivo.
+- Las raíces críticas (unidades, `Windows`, `Program Files`, tu perfil, Documentos, Escritorio) nunca pueden ser raíz de borrado.
+- Los junctions y puntos de reanálisis no se siguen jamás.
+- Un archivo bloqueado se omite y se reporta; no es fatal.
+- Nada se borra hasta que pulsas el botón, y **Simular limpieza** enseña el plan antes.
 
-## Features
+## Qué limpia
 
-| Area | Status | Notes |
+| Módulo | Nivel | Notas |
 |---|---|---|
-| User `%TEMP%` | ✅ | Regenerated on demand |
-| Windows `\Temp` | ✅ | Needs elevation for part of it; the rest is skipped and reported |
-| Thumbnail cache | ✅ | Explorer rebuilds it |
-| WSL distro caches | ✅ | apt, journald, pip, npm, uv — user caches cleaned directly |
-| Dry run | ✅ | Nothing is touched |
-| Exclusions | ✅ | Path prefixes and glob patterns |
-| Local history | ✅ | JSON Lines, stays on the machine |
-| Browser caches | 🚧 v0.3 | Cookies, history and passwords always excluded |
-| Storage analyser | 🚧 v0.4 | — |
-| Recycle bin | 🚧 v0.2 | — |
+| Temporales del usuario (`%TEMP%`) | Seguro | Se regeneran |
+| Temporales de Windows (`\Windows\Temp`) | Revisar | Parte requiere administrador; el resto se omite y se reporta |
+| Caché de miniaturas | Seguro | Explorer la reconstruye |
+| Informes de errores (WER) | Seguro / Revisar | Usuario y cola del sistema |
+| Volcados de fallos | Seguro / Revisar | `CrashDumps` y `Minidump` |
+| Cachés de navegador | Seguro | Chrome, Edge, Brave, Vivaldi y Firefox: solo caché |
+| Papelera de reciclaje | Revisar | Nunca preseleccionada; se vacía por la API del shell |
+| Cachés dentro de WSL | Seguro / Revisar | apt, journald, pip, npm, uv por distro |
 
-## Safety model
+### Lo que nunca toca
+
+Cookies, historial, contraseñas, sesiones, extensiones, marcadores, descargas, documentos,
+proyectos, `Program Files` y cualquier ruta que añadas a la lista de exclusiones.
+
+## Modelo de seguridad
 
 ```
-SCAN -> VALIDATE -> SELECT -> PRE-CLEAN VALIDATION -> DELETE -> VERIFY -> REPORT
+ESCANEAR -> VALIDAR -> SELECCIONAR -> VALIDACIÓN PREVIA -> BORRAR -> VERIFICAR -> REPORTAR
 ```
 
-1. A module only declares a root directory. It never receives delete rights.
-2. `PathSafetyValidator` rejects drive roots, protected folders and any root that contains one.
-3. `CleanupGate` re-checks containment, exclusions, reparse points and existence immediately before deleting.
-4. Files newer than the scan (plus a five-minute tolerance) are reported as `ChangedSinceScan`.
-5. A failure on one file is recorded and the run continues.
-6. Candidate lists are processed in chunks of 512 so a huge folder cannot blow up memory.
+1. Un módulo solo declara un directorio raíz. Nunca recibe permiso de borrado.
+2. `PathSafetyValidator` rechaza raíces de unidad, carpetas protegidas y cualquier raíz que las contenga.
+3. `CleanupGate` revalida contención, exclusiones, puntos de reanálisis y existencia justo antes de borrar.
+4. Un archivo más nuevo que el escaneo (más 5 minutos de margen) se marca `ChangedSinceScan`.
+5. Un fallo en un archivo se registra y la operación continúa.
+6. Los candidatos se procesan en lotes de 512 para no inflar la memoria en equipos ya justos.
+
+La papelera y WSL son `DeletionScope.External`: el motor les entrega una puerta que **rechaza**
+cualquier borrado de archivo, y solo pueden ejecutar su propia operación acotada.
 
 ## WSL
 
-Windows cleaners cannot see inside `ext4.vhdx`, so WSL items are a separate path:
+Windows no ve dentro de `ext4.vhdx`, así que WSL va por su propio camino:
 
-- `IWslBridge` runs `wsl.exe` with an argument list — never a composed shell string.
-- Measurement is one `bash -lc` script that reports bytes and file counts per cache.
-- A failed measurement is an error, not an empty result. The UI never claims "nothing to clean" when it could not look.
-- Cleanup only runs a fixed recipe from `WslRecipes`; anything else resolves to `null` and fails closed.
-- User-level caches are cleaned directly; `apt` and `journald` need passwordless `sudo` and are reported when unavailable.
+- `IWslBridge` ejecuta `wsl.exe` con lista de argumentos, nunca una cadena de shell compuesta.
+- La medición es un único script `bash -lc` que informa bytes y número de archivos por caché.
+- Una medición fallida **es un error**, no un resultado vacío: la app nunca dice "no hay nada" cuando no pudo mirar.
+- La limpieza solo ejecuta recetas fijas de `WslRecipes`; lo que no está en la lista se resuelve a `null` y falla cerrado.
+- Las cachés de usuario se limpian directamente; `apt` y `journald` exigen `sudo` sin contraseña y se reportan cuando no está.
 
-Freeing space inside a distro does not shrink the VHDX. Compaction needs `wsl --shutdown` plus
-`Optimize-VHD` with administrator rights, and the app says so instead of pretending.
+Liberar espacio dentro de una distro no encoge el VHDX. Compactarlo requiere `wsl --shutdown` y
+`Optimize-VHD` con permisos de administrador, y la app lo dice en vez de fingir que lo ha hecho.
 
-## Install
+## Instalación
 
-Portable build — no installer, no service, no scheduled task:
+Portable: sin instalador, sin servicio, sin tarea programada.
 
-1. Download `Cleaner-win-x64.zip` from [Releases](https://github.com/smouj/cleaner/releases).
-2. Extract anywhere and run `Cleaner.App.exe`.
+1. Descarga `Holgura-win-x64.zip` desde [Releases](https://github.com/smouj/holgura/releases).
+2. Descomprime donde quieras y ejecuta `Holgura.App.exe`.
 
-Diagnostics live in `%LOCALAPPDATA%\Cleaner\app.log`.
+Diagnóstico en `%LOCALAPPDATA%\Holgura\app.log`.
 
-## Build
+## Compilar
 
-Requires the .NET 10 SDK on Windows.
+Requiere el SDK de .NET 10 en Windows.
 
 ```powershell
 dotnet restore
 dotnet build -c Release
 dotnet test -c Release
-dotnet publish src/Cleaner.App/Cleaner.App.csproj -c Release -r win-x64 --self-contained true
+dotnet publish src/Holgura.App/Holgura.App.csproj -c Release -r win-x64 --self-contained true
 ```
 
-## Architecture
+## Arquitectura
 
 ```
 src/
-  Cleaner.Contracts/          Interfaces, results, safety levels. No dependencies.
-  Cleaner.Core/               PathSafetyValidator, exclusions, history, formatting.
-  Cleaner.Engine/             Scan/clean pipeline, CleanupGate, cleaner modules.
-  Cleaner.Platform.Windows/   File system access, WSL bridge, Windows paths.
-  Cleaner.App/                Desktop shell (WPF, MVVM).
+  Holgura.Contracts/          Interfaces, resultados y niveles de seguridad. Sin dependencias.
+  Holgura.Core/               PathSafetyValidator, exclusiones, historial, formato.
+  Holgura.Engine/             Pipeline de escaneo/limpieza, CleanupGate, módulos.
+  Holgura.Platform.Windows/   Sistema de ficheros, puente WSL, papelera, rutas.
+  Holgura.App/                Shell de escritorio (WPF, MVVM).
 tests/
-  Cleaner.Core.Tests/
-  Cleaner.Engine.Tests/
+  Holgura.Core.Tests/
+  Holgura.Engine.Tests/
 tools/
-  SmokeTest/                  Headless scan + dry run against the real machine.
+  SmokeTest/                  Escaneo y simulación sin interfaz contra la máquina real.
 ```
 
-The engine knows nothing about the UI, and the UI knows nothing about deletion rules.
+El motor no sabe nada de la interfaz, y la interfaz no sabe nada de las reglas de borrado.
 
-### A note on the shell
+### Nota sobre el shell
 
-The first iteration targeted WinUI 3. Building it requires the *Appx* MSBuild tasks that only ship
-with the Visual Studio "Windows application development" workload. The XAML layer therefore uses
-WPF on .NET 10, which builds with the SDK alone. Everything below `Cleaner.App` is unchanged, so
-swapping the shell is a single-project change.
+La primera iteración apuntó a WinUI 3. Compilarlo exige las tareas *Appx* de MSBuild que solo
+vienen con el workload "Windows application development" de Visual Studio. La capa XAML usa WPF
+sobre .NET 10, que compila solo con el SDK. Todo lo que hay debajo de `Holgura.App` es idéntico:
+cambiar de shell es un cambio de un solo proyecto.
 
-## Verified on real hardware
+## Verificado en hardware real
 
 ```
 == SCAN ==
 items=3  files=985  bytes=805 MB  (3.5 s)  warnings=0
   514.0 MB | Review | C:\WINDOWS\Temp
-  153.4 MB | Safe   | ...\Windows\Explorer (thumbnails)
+  153.4 MB | Safe   | ...\Windows\Explorer (miniaturas)
   100.2 MB | Safe   | ...\AppData\Local\Temp
 
 == DRY RUN ==
 wouldDelete=1,002  skipped=0  errors=0  (0.7 s)
 
 == SAFETY ==
-rejects C:\, C:\Windows, C:\Program Files, C:\Users\<user>, Documents
+rechaza C:\, C:\Windows, C:\Program Files, C:\Users\<usuario>, Documentos
 ```
 
-27 unit tests cover the validator, the exclusions and the engine (locked files, reparse points,
-protected roots, dry runs, cancellation and age filters).
+27 tests unitarios cubren el validador, las exclusiones y el motor: archivos bloqueados, puntos de
+reanálisis, raíces protegidas, simulaciones, cancelación y filtros de antigüedad.
 
-## Roadmap
+## Hoja de ruta
 
-- **v0.1** foundation, engine, three system cleaners, WSL caches, tests, CI ✅
-- **v0.2** Windows Temp hardening, recycle bin, Windows Error Reporting, crash dumps
-- **v0.3** browser caches (Edge, Chrome, Firefox, Brave), with history, cookies and passwords always excluded
-- **v0.4** storage analyser
-- **v0.5** developer caches (NuGet, npm, pnpm, Yarn, pip, Gradle, Cargo, VS Code)
-- **v0.6** richer exclusions and history details
-- **v0.8** signed portable release
-- **v1.0** public release
+- **v1.0** motor, siete limpiadores, WSL, simulacro, historial, tests y CI ✅
+- **v1.1** analizador de almacenamiento por carpetas
+- **v1.2** cachés de desarrollo (NuGet, npm, pnpm, Yarn, pip, Gradle, Cargo, VS Code)
+- **v1.3** modo administrador opt-in para `Windows\Temp` y `Minidump`
+- **v2.0** shell WinUI 3 cuando el toolchain esté disponible
 
-## Contributing
+## Contribuir
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.md).
+Lee [CONTRIBUTING.md](CONTRIBUTING.md). Seguridad: [SECURITY.md](SECURITY.md).
 
-## Privacy
+## Privacidad
 
-Everything runs locally. No account, no server, no analytics, no update check that reports usage.
-Your file names never leave the machine.
+Todo ocurre en local. Sin cuenta, sin servidor, sin analítica, sin comprobación de actualizaciones
+que reporte uso. Tus nombres de archivo no salen de la máquina.
 
-## License
+## Licencia
 
-MIT — see [LICENSE](LICENSE).
+MIT — ver [LICENSE](LICENSE).

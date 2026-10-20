@@ -3,16 +3,16 @@
 ## Layers
 
 ```
-Cleaner.App (WinUI 3)
+Holgura.App (WinUI 3)
     |
-Cleaner.Engine  -------- Cleaner.Platform.Windows
+Holgura.Engine  -------- Holgura.Platform.Windows
     |                             |
-Cleaner.Core  --------------------+
+Holgura.Core  --------------------+
     |
-Cleaner.Contracts
+Holgura.Contracts
 ```
 
-`Cleaner.Contracts` has no dependencies. Everyone else may depend on it.
+`Holgura.Contracts` has no dependencies. Everyone else may depend on it.
 
 ## Scan
 

@@ -1,0 +1,31 @@
+<Window x:Class="Holgura.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Holgura"
+        Width="1180"
+        Height="760"
+        MinWidth="900"
+        MinHeight="600"
+        Background="{DynamicResource AppBackground}"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="228" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,0,1,0">
+            <StackPanel Margin="16,26,16,16">
+                <TextBlock Text="Holgura" Style="{StaticResource H1}" Margin="8,0,0,20" />
+                <RadioButton x:Name="NavHome" Content="Inicio" Style="{StaticResource NavButton}" IsChecked="True" Checked="OnNav" />
+                <RadioButton x:Name="NavHistory" Content="Historial" Style="{StaticResource NavButton}" Checked="OnNav" />
+                <RadioButton x:Name="NavExclusions" Content="Exclusiones" Style="{StaticResource NavButton}" Checked="OnNav" />
+                <TextBlock Text="Todo el análisis ocurre en este equipo. Nada se envía fuera."
+                           Style="{StaticResource Tiny}" Margin="8,32,8,0" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <Frame x:Name="NavFrame" Grid.Column="1" NavigationUIVisibility="Hidden" Background="Transparent" />
+    </Grid>
+</Window>

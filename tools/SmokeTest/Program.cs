@@ -1,7 +1,7 @@
-using Cleaner.Contracts;
-using Cleaner.Core;
-using Cleaner.Engine;
-using Cleaner.Platform.Windows;
+using Holgura.Contracts;
+using Holgura.Core;
+using Holgura.Engine;
+using Holgura.Platform.Windows;
 
 var fileSystem = new WindowsFileSystem();
 var history = new JsonHistoryStore(Path.Combine(Path.GetTempPath(), "cleaner-smoke-history.jsonl"));

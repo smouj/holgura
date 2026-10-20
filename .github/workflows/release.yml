@@ -18,11 +18,11 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Publish
-        run: dotnet publish src/Cleaner.App/Cleaner.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/win-x64
+        run: dotnet publish src/Holgura.App/Holgura.App.csproj -c Release -r win-x64 --self-contained true -o artifacts/win-x64
 
       - name: Zip
-        run: Compress-Archive -Path artifacts/win-x64/* -DestinationPath artifacts/Cleaner-win-x64.zip
+        run: Compress-Archive -Path artifacts/win-x64/* -DestinationPath artifacts/Holgura-win-x64.zip
 
       - uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/Cleaner-win-x64.zip
+          files: artifacts/Holgura-win-x64.zip
