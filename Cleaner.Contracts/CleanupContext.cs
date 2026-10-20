@@ -1,0 +1,18 @@
+namespace Cleaner.Contracts;
+
+public sealed class CleanupContext
+{
+    public required ScanItem Item { get; init; }
+
+    public required IFileSystem FileSystem { get; init; }
+
+    public required ICleanupGate Gate { get; init; }
+
+    /// <summary>When true nothing is deleted; each candidate is reported as WouldDelete.</summary>
+    public bool DryRun { get; init; }
+
+    /// <summary>Timestamp of the scan that produced <see cref="Item"/>.</summary>
+    public DateTimeOffset ScanTimestampUtc { get; init; }
+
+    public int MaxParallelism { get; init; } = 4;
+}
