@@ -104,9 +104,41 @@ public abstract class DirectoryCleanerModule : ICleanerModule
             MaxDegreeOfParallelism = Math.Max(1, context.MaxParallelism),
         };
 
-        var files = context.FileSystem.EnumerateFiles(context.Item.RootPath, recursive: true).ToArray();
+        // Chunked so a folder with hundreds of thousands of files cannot balloon the working set;
+        // the whole point of this cleaner is to run on machines that are already short on memory.
+        const int ChunkSize = 512;
+        var buffer = new List<FileEntry>(ChunkSize);
 
-        Parallel.ForEach(files, options, file =>
+        foreach (var file in context.FileSystem.EnumerateFiles(context.Item.RootPath, recursive: true))
+        {
+            options.CancellationToken.ThrowIfCancellationRequested();
+            buffer.Add(file);
+
+            if (buffer.Count < ChunkSize)
+            {
+                continue;
+            }
+
+            Parallel.ForEach(buffer, options, ProcessOne);
+            buffer.Clear();
+        }
+
+        if (buffer.Count > 0)
+        {
+            Parallel.ForEach(buffer, options, ProcessOne);
+        }
+
+        return Task.FromResult(new CleanupResult
+        {
+            ModuleId = Id,
+            ItemId = context.Item.Id,
+            Items = results.OrderBy(r => r.Path, StringComparer.OrdinalIgnoreCase).ToArray(),
+            Duration = DateTimeOffset.UtcNow - started,
+            DryRun = context.DryRun,
+            BytesFreed = context.DryRun ? 0 : freed[0],
+        });
+
+        void ProcessOne(FileEntry file)
         {
             options.CancellationToken.ThrowIfCancellationRequested();
 
@@ -153,16 +185,6 @@ public abstract class DirectoryCleanerModule : ICleanerModule
             {
                 results.Add(new CleanupItemResult(file.FullName, CleanupOutcome.Failed, ex.Message));
             }
-        });
-
-        return Task.FromResult(new CleanupResult
-        {
-            ModuleId = Id,
-            ItemId = context.Item.Id,
-            Items = results.OrderBy(r => r.Path, StringComparer.OrdinalIgnoreCase).ToArray(),
-            Duration = DateTimeOffset.UtcNow - started,
-            DryRun = context.DryRun,
-            BytesFreed = context.DryRun ? 0 : freed[0],
-        });
+        }
     }
 }

@@ -73,10 +73,11 @@ public sealed class WslCliBridge : IWslBridge
 
     public async Task<IReadOnlyList<WslUsage>> MeasureAsync(string distro, CancellationToken cancellationToken = default)
     {
-        var (exit, output, _) = await RunAsync(["-d", distro, "--", "bash", "-lc", MeasureScript], cancellationToken).ConfigureAwait(false);
+        var (exit, output, error) = await RunAsync(["-d", distro, "--", "bash", "-lc", MeasureScript], cancellationToken).ConfigureAwait(false);
         if (exit != 0)
         {
-            return [];
+            // Never report "nothing to clean" when the truth is "could not look".
+            throw new InvalidOperationException($"wsl -d {distro} exited with {exit}: {error.Trim()}");
         }
 
         var usage = new List<WslUsage>();
