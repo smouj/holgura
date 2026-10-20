@@ -8,12 +8,16 @@ namespace Cleaner.App;
 
 public partial class App : Application
 {
-    private static readonly string LogPath = Path.Combine(WindowsPaths.AppDataDirectory, "app.log");
+    private static string LogPath =>
+        Path.Combine(WindowsPaths.AppDataDirectory, "app.log");
 
     public App()
     {
+        Log("App: ctor begin");
         Services = AppServices.Create();
+        Log("App: services created");
         ThemeService.Apply();
+        Log("App: theme applied");
 
         DispatcherUnhandledException += (_, args) =>
         {
@@ -29,9 +33,9 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        Log("startup");
+        Log("OnStartup: begin");
         base.OnStartup(e);
-        Log("startup: base done, windows=" + Windows.Count);
+        Log("OnStartup: base done, windows=" + Windows.Count);
     }
 
     public static void Log(string message)
@@ -39,7 +43,7 @@ public partial class App : Application
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(LogPath)!);
-            File.AppendAllText(LogPath, DateTimeOffset.Now.ToString("s") + " " + message + Environment.NewLine);
+            File.AppendAllText(LogPath, DateTimeOffset.Now.ToString("HH:mm:ss.fff") + " " + message + Environment.NewLine);
         }
         catch (Exception)
         {
