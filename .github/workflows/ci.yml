@@ -40,3 +40,11 @@ jobs:
           if (-not (Test-Path -LiteralPath $compiler)) { throw "Inno Setup compiler not found: $compiler" }
           & $compiler /DAppVersion=1.1.0 installer\Holgura.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Holgura-Setup-win-x64
+          path: artifacts/Holgura-Setup-win-x64.exe
+          if-no-files-found: error
+          retention-days: 7
