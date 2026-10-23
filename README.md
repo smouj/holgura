@@ -128,8 +128,10 @@ accesos en el menú Inicio y, por defecto, en el escritorio; al terminar puede a
 portable sigue disponible para quien prefiera descomprimir y ejecutar. La release
 [v1.1.0](https://github.com/smouj/holgura/releases/tag/v1.1.0) incluye ambos formatos.
 
-1. Descarga `Holgura-Setup-win-x64.exe` desde [Releases](https://github.com/smouj/holgura/releases) e instala para tu usuario.
-2. Para la versión portable, descarga `Holgura-win-x64.zip`, descomprímelo donde quieras y ejecuta `Holgura.App.exe`.
+1. Descarga [Holgura-Setup-win-x64.exe](https://github.com/smouj/holgura/releases/download/v1.1.0/Holgura-Setup-win-x64.exe) e instala para tu usuario.
+2. Para la versión portable, descarga [Holgura-win-x64.zip](https://github.com/smouj/holgura/releases/download/v1.1.0/Holgura-win-x64.zip), descomprímelo donde quieras y ejecuta `Holgura.App.exe`.
+
+El instalador no tiene firma digital de editor; Windows puede mostrar un aviso de SmartScreen al abrirlo.
 
 Diagnóstico en `%LOCALAPPDATA%\Holgura\app.log`.
 
