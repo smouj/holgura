@@ -1,5 +1,10 @@
 # Changelog
 
+## Sin publicar
+
+- Se actualizan Microsoft.NET.Test.Sdk, xUnit y su runner en los proyectos de pruebas actuales.
+- README apunta al instalador publicado en la release 1.1.0 y refleja las funciones ya disponibles.
+
 ## 1.1.0 — 2026-10-23
 
 **Interfaz y análisis**

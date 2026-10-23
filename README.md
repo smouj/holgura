@@ -125,8 +125,8 @@ Liberar espacio dentro de una distro no encoge el VHDX. Compactarlo requiere `ws
 Holgura se publica como aplicación autocontenida: no tienes que instalar .NET por separado. El
 flujo de publicación prepara `Holgura-Setup-win-x64.exe`, una instalación para tu usuario que crea
 accesos en el menú Inicio y, por defecto, en el escritorio; al terminar puede abrir la app. El ZIP
-portable sigue disponible para quien prefiera descomprimir y ejecutar. La release 1.0.0 existente
-solo incluye el ZIP; las siguientes releases incluirán el instalador.
+portable sigue disponible para quien prefiera descomprimir y ejecutar. La release
+[v1.1.0](https://github.com/smouj/holgura/releases/tag/v1.1.0) incluye ambos formatos.
 
 1. Descarga `Holgura-Setup-win-x64.exe` desde [Releases](https://github.com/smouj/holgura/releases) e instala para tu usuario.
 2. Para la versión portable, descarga `Holgura-win-x64.zip`, descomprímelo donde quieras y ejecuta `Holgura.App.exe`.
@@ -182,8 +182,10 @@ Los resultados de espacio varían según el equipo y no se publican en este READ
 ## Hoja de ruta
 
 - **v1.0** motor, siete limpiadores, WSL, simulacro, historial, tests y CI ✅
-- **v1.1** analizador de almacenamiento por carpetas
-- **v1.2** cachés de desarrollo (NuGet, npm, pnpm, Yarn, pip, Gradle, Cargo, VS Code)
+- **v1.1.0** interfaz adaptable, inventario de aplicaciones por unidad, selección múltiple,
+  instalador por usuario, documentación y protección de Project Infest ✅
+- **v1.2** analizador de almacenamiento por carpetas y cachés de desarrollo (NuGet, npm, pnpm,
+  Yarn, pip, Gradle, Cargo, VS Code)
 - **v1.3** modo administrador opt-in para `Windows\Temp` y `Minidump`
 - **v2.0** shell WinUI 3 cuando el toolchain esté disponible
 
