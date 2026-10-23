@@ -5,84 +5,301 @@
       Background="Transparent"
       FontFamily="Segoe UI Variable Text, Segoe UI">
 
-    <Grid Margin="32,26,32,24">
+    <Grid x:Name="ContentRoot" Margin="28,20,28,18">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0">
-            <TextBlock Text="Estado del equipo" Style="{StaticResource Caption}" />
-            <TextBlock Text="{Binding TotalText}" Style="{StaticResource Display}" Margin="0,2,0,0" />
-            <TextBlock Text="archivos recuperables" Style="{StaticResource Caption}" />
-        </StackPanel>
-
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,18,0,0">
-            <Button Content="Analizar equipo" Style="{StaticResource PrimaryButton}" Click="OnScanClick" IsEnabled="{Binding CanScan}" />
-            <TextBlock Text="{Binding StatusText}" Style="{StaticResource Caption}" Margin="16,0,0,0"
-                       VerticalAlignment="Center" MaxWidth="640" />
-        </StackPanel>
-
-        <TextBlock Grid.Row="2" Text="Elementos encontrados" Style="{StaticResource BodyStrong}" Margin="0,26,0,6" />
-
-        <ListView Grid.Row="3" ItemsSource="{Binding Items}" BorderThickness="0" Background="Transparent"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                    <Setter Property="Padding" Value="0" />
-                    <Setter Property="Margin" Value="0,2" />
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Border Style="{StaticResource Card}" Margin="0,4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <CheckBox Grid.Column="0" VerticalAlignment="Top" Margin="0,3,0,0"
-                                      IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                                      IsEnabled="{Binding CanSelect}" />
-
-                            <StackPanel Grid.Column="1" Margin="14,0,0,0">
-                                <TextBlock Text="{Binding Title}" Style="{StaticResource BodyStrong}" />
-                                <TextBlock Text="{Binding Description}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
-                                <TextBlock Text="{Binding Detail}" Style="{StaticResource Tiny}" Margin="0,4,0,0" />
-                                <Button Content="Ver archivos" Tag="{Binding}" Click="OnPreviewClick"
-                                        Style="{StaticResource QuietButton}" Padding="10,4" FontSize="11.5"
-                                        HorizontalAlignment="Left" Margin="0,8,0,0" />
-                            </StackPanel>
-
-                            <TextBlock Grid.Column="2" Text="{Binding SizeText}" Style="{StaticResource BodyStrong}"
-                                       VerticalAlignment="Top" Margin="12,3,0,0" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-
-        <Grid Grid.Row="4" Margin="0,16,0,0">
+        <Grid Grid.Row="0" Margin="2,0,2,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="{Binding SelectionText}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                <Button Content="Todo" Style="{StaticResource QuietButton}" Padding="10,4" FontSize="11.5" Click="OnSelectAllClick" Margin="0,0,6,0" />
-                <Button Content="Nada" Style="{StaticResource QuietButton}" Padding="10,4" FontSize="11.5" Click="OnSelectNoneClick" />
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="LIMPIEZA SEGURA" Style="{StaticResource Kicker}" />
+                <TextBlock Text="Espacio para respirar" Style="{StaticResource H1}" Margin="0,3,0,0" />
+                <TextBlock Text="Revisa las rutas y elige exactamente qué quieres quitar."
+                           Style="{StaticResource Caption}" Margin="0,3,0,0" />
             </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Cancelar" Style="{StaticResource QuietButton}" Click="OnCancelClick"
+                        IsEnabled="{Binding CanCancel}" Margin="0,0,8,0" />
+                <Button Content="Analizar equipo" Style="{StaticResource PrimaryButton}" Click="OnScanClick"
+                        IsEnabled="{Binding CanScan}" />
+            </StackPanel>
+        </Grid>
 
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.05*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="0.9*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="1.05*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource MetricCard}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="ESPACIO EN UNIDAD" Style="{StaticResource Kicker}" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding Drives}" SelectedItem="{Binding SelectedDrive}"
+                                  DisplayMemberPath="Label" Style="{StaticResource CompactComboBox}"
+                                  MinWidth="112" ToolTip="Selecciona una unidad fija" />
+                    </Grid>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,9,0,7">
+                        <TextBlock Text="{Binding DriveFreeText}" Style="{StaticResource MetricValue}" />
+                        <TextBlock Text=" libres" Style="{StaticResource Caption}" VerticalAlignment="Bottom" Margin="6,0,0,5" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2">
+                        <ProgressBar Style="{StaticResource UsageProgressBar}" Value="{Binding DriveUsedPercent, Mode=OneWay}" />
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding DriveCapacityText}" Style="{StaticResource Tiny}" />
+                            <TextBlock Grid.Column="1" Text="{Binding DriveUsageText}" Style="{StaticResource Tiny}" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource MetricCard}">
+                <StackPanel>
+                    <TextBlock Text="CANDIDATOS DETECTADOS" Style="{StaticResource Kicker}" />
+                    <TextBlock Text="{Binding TotalText}" Style="{StaticResource MetricValue}" Margin="0,9,0,0" />
+                    <TextBlock Text="{Binding TotalFilesText}" Style="{StaticResource Tiny}" Margin="0,5,0,0" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="4" Style="{StaticResource MetricCard}">
+                <StackPanel>
+                    <TextBlock Text="TU SELECCIÓN" Style="{StaticResource Kicker}" />
+                    <TextBlock Text="{Binding SelectedBytesText}" Style="{StaticResource MetricValue}" Margin="0,9,0,0" />
+                    <TextBlock Text="{Binding SelectionText}" Style="{StaticResource Tiny}" Margin="0,5,0,0" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.88*" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="1.55*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Card}" Padding="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Margin="4,0,4,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Zonas revisadas" Style="{StaticResource BodyStrong}" />
+                            <TextBlock Text="Marca un grupo o abre sus archivos." Style="{StaticResource Tiny}" Margin="0,2,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Seleccionar zonas seguras" Style="{StaticResource LinkButton}"
+                                Click="OnSelectSafeZonesClick" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <ListView ItemsSource="{Binding Items}" SelectedItem="{Binding CurrentItem, Mode=TwoWay}"
+                                  BorderThickness="0" Background="Transparent"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.CanContentScroll="True"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource SelectableListItem}">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Padding" Value="6" />
+                                    <Setter Property="Margin" Value="0,2" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid MinHeight="68">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="26" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" VerticalAlignment="Top" Margin="0,4,0,0"
+                                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                  IsEnabled="{Binding CanSelect}" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,8,0">
+                                            <TextBlock Text="{Binding Title}" Style="{StaticResource BodyStrong}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Item.RootPath}" />
+                                            <TextBlock Text="{Binding Description}" Style="{StaticResource Tiny}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource Tiny}"
+                                                       TextTrimming="CharacterEllipsis" Margin="0,3,0,0" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                            <TextBlock Text="{Binding SizeText}" Style="{StaticResource BodyStrong}" HorizontalAlignment="Right" />
+                                            <Border Background="{DynamicResource SurfaceAlt}" CornerRadius="6" Padding="6,2" Margin="0,5,0,0" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding SafetyLabel}" Style="{StaticResource Tiny}" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock Text="Pulsa «Analizar equipo» para revisar las cachés temporales seguras."
+                                   IsHitTestVisible="False" TextAlignment="Center"
+                                   VerticalAlignment="Center" Margin="24">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyState}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Items.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="14">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="ARCHIVOS" Style="{StaticResource Kicker}" />
+                            <TextBlock Text="{Binding CurrentItemTitle}" Style="{StaticResource H2}" Margin="0,3,0,0"
+                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentItem.RootPath}" />
+                            <TextBlock Text="{Binding CurrentItemDescription}" Style="{StaticResource Tiny}" Margin="0,2,0,0"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="Archivos visibles" Style="{StaticResource LinkButton}" Click="OnSelectVisibleFilesClick"
+                                    IsEnabled="{Binding CurrentItem.CanSelectIndividualFiles}" />
+                            <Button Content="Quitar selección" Style="{StaticResource LinkButton}" Click="OnClearCurrentSelectionClick"
+                                    Margin="6,0,0,0" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Grid.Row="1" Text="{Binding CurrentItemPreviewText}" Style="{StaticResource Tiny}"
+                               Margin="0,5,0,8" TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentItemPreviewText}" />
+
+                    <Grid Grid.Row="2" Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="132" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="1" Text="ARCHIVO Y RUTA" Style="{StaticResource TableHeader}" />
+                        <TextBlock Grid.Column="2" Text="TAMAÑO" Style="{StaticResource TableHeader}" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="3" Text="MODIFICADO" Style="{StaticResource TableHeader}" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Grid Grid.Row="3">
+                        <ListView ItemsSource="{Binding CurrentFiles}" BorderThickness="0" Background="Transparent"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.CanContentScroll="True"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource SelectableListItem}">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                    <Setter Property="Padding" Value="4" />
+                                    <Setter Property="Margin" Value="0,1" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid MinHeight="44" Margin="2,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="28" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="132" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" VerticalAlignment="Center"
+                                                  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                                  IsEnabled="{Binding CanSelect}" />
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,8,0">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrong}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                                            <TextBlock Text="{Binding DirectoryPath}" Style="{StaticResource Tiny}"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding FullPath}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding SizeText}" Style="{StaticResource Caption}"
+                                                   VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="3" Text="{Binding ModifiedText}" Style="{StaticResource Tiny}"
+                                                   VerticalAlignment="Center" HorizontalAlignment="Right" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <TextBlock Text="Selecciona una zona para ver sus archivos. Project Infest está protegido."
+                                   IsHitTestVisible="False" TextAlignment="Center"
+                                   VerticalAlignment="Center" Margin="30">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource EmptyState}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CurrentFiles.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+
+                    <Border Grid.Row="4" Background="{DynamicResource SurfaceAlt}" CornerRadius="7" Padding="8,6" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding OperationSummary}" Style="{StaticResource Tiny}" TextWrapping="Wrap" />
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="3" Margin="2,12,2,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding WarningText}" Style="{StaticResource WarningText}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-                <Button Content="Simular limpieza" Style="{StaticResource QuietButton}" Click="OnDryRunClick" IsEnabled="{Binding CanScan}" Margin="0,0,8,0" />
-                <Button Content="Limpiar" Style="{StaticResource PrimaryButton}" Click="OnCleanClick" IsEnabled="{Binding CanScan}" />
+                <Button Content="Simular" Style="{StaticResource QuietButton}" Click="OnDryRunClick"
+                        IsEnabled="{Binding CanClean}" Margin="0,0,8,0" />
+                <Button Content="Eliminar selección" Style="{StaticResource DangerButton}" Click="OnCleanClick"
+                        IsEnabled="{Binding CanClean}" />
             </StackPanel>
         </Grid>
     </Grid>

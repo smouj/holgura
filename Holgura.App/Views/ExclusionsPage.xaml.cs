@@ -11,6 +11,7 @@ public partial class ExclusionsPage : Page
     {
         InitializeComponent();
         Reload();
+        Loaded += (_, _) => PageAnimations.FadeIn(ContentRoot);
     }
 
     private void Reload()

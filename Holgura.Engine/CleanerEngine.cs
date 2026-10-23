@@ -58,7 +58,7 @@ public sealed class CleanerEngine
 
         return new ScanReport
         {
-            TimestampUtc = DateTimeOffset.UtcNow,
+            TimestampUtc = started,
             Duration = DateTimeOffset.UtcNow - started,
             Items = items,
             Warnings = warnings,
@@ -70,7 +70,8 @@ public sealed class CleanerEngine
         DateTimeOffset scanTimestampUtc,
         bool dryRun,
         int maxParallelism = 4,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, FileEntry>>? selectedFilesByItem = null)
     {
         ArgumentNullException.ThrowIfNull(selectedItems);
         var started = DateTimeOffset.UtcNow;
@@ -129,6 +130,9 @@ public sealed class CleanerEngine
                 Gate = gate,
                 DryRun = dryRun,
                 ScanTimestampUtc = scanTimestampUtc,
+                SelectedFileDetails = selectedFilesByItem is not null && selectedFilesByItem.TryGetValue(item.Id, out var selectedFiles)
+                    ? selectedFiles
+                    : null,
                 MaxParallelism = maxParallelism,
             };
 

@@ -40,7 +40,7 @@ public sealed class BrowserCacheCleaner : DirectoryCleanerModule
         }
     }
 
-    protected override bool Include(FileEntry file, ScanRoot root, ScanContext context) =>
+    protected override bool Include(FileEntry file, ScanRoot root, DateTimeOffset asOfUtc) =>
         CacheSegments.Any(segment => file.FullName.Contains($"{Path.DirectorySeparatorChar}{segment}{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
 
     private static IEnumerable<(string Label, string Root)> EnumerateChromium(string local)

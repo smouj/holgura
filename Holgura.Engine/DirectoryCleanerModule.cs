@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Holgura.Contracts;
+using Holgura.Core;
 
 namespace Holgura.Engine;
 
@@ -19,12 +20,13 @@ public abstract class DirectoryCleanerModule : ICleanerModule
 
     protected abstract IEnumerable<ScanRoot> GetRoots(ScanContext context);
 
-    protected virtual bool Include(FileEntry file, ScanRoot root, ScanContext context) =>
-        root.MinimumAge is null || file.LastWriteUtc <= DateTime.UtcNow - root.MinimumAge.Value;
+    protected virtual bool Include(FileEntry file, ScanRoot root, DateTimeOffset asOfUtc) =>
+        root.MinimumAge is null || file.LastWriteUtc <= asOfUtc.UtcDateTime - root.MinimumAge.Value;
 
     public virtual Task<ScanResult> ScanAsync(ScanContext context, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(context);
+        var started = DateTimeOffset.UtcNow;
         var items = new List<ScanItem>();
         var warnings = new List<string>();
         var index = 0;
@@ -33,6 +35,12 @@ public abstract class DirectoryCleanerModule : ICleanerModule
         {
             cancellationToken.ThrowIfCancellationRequested();
             index++;
+
+            if (ProtectedPathPolicy.IsProjectInfestPath(root.Path))
+            {
+                warnings.Add($"'{root.Title}' está protegido porque su ruta pertenece a Project Infest.");
+                continue;
+            }
 
             if (string.IsNullOrWhiteSpace(root.Path) || !context.FileSystem.DirectoryExists(root.Path))
             {
@@ -44,11 +52,18 @@ public abstract class DirectoryCleanerModule : ICleanerModule
             long bytes = 0;
             DateTime lastWrite = DateTime.MinValue;
             var samples = new List<string>(Math.Min(context.MaxSampleFiles, 100));
+            var detailLimit = Math.Clamp(context.MaxFileDetails, 0, 5_000);
+            var details = new PriorityQueue<FileEntry, long>();
 
             foreach (var file in context.FileSystem.EnumerateFiles(root.Path, root.Recursive))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                if (!Include(file, root, context))
+                if (ProtectedPathPolicy.IsProjectInfestPath(file.FullName))
+                {
+                    continue;
+                }
+
+                if (!Include(file, root, started))
                 {
                     continue;
                 }
@@ -64,12 +79,31 @@ public abstract class DirectoryCleanerModule : ICleanerModule
                 {
                     samples.Add(file.FullName);
                 }
+
+                if (detailLimit > 0)
+                {
+                    if (details.Count < detailLimit)
+                    {
+                        details.Enqueue(file, file.Length);
+                    }
+                    else if (file.Length > details.Peek().Length)
+                    {
+                        details.Dequeue();
+                        details.Enqueue(file, file.Length);
+                    }
+                }
             }
 
             if (count == 0)
             {
                 continue;
             }
+
+            var detailedFiles = details.UnorderedItems
+                .Select(entry => entry.Element)
+                .OrderByDescending(file => file.Length)
+                .ThenBy(file => file.FullName, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
             items.Add(new ScanItem
             {
@@ -80,10 +114,14 @@ public abstract class DirectoryCleanerModule : ICleanerModule
                 Category = Category,
                 SafetyLevel = root.SafetyLevel,
                 RootPath = root.Path,
+                Recursive = root.Recursive,
+                MinimumAge = root.MinimumAge,
                 FileCount = count,
                 TotalBytes = bytes,
                 LastWriteUtc = lastWrite == DateTime.MinValue ? null : new DateTimeOffset(lastWrite, TimeSpan.Zero),
                 SampleFiles = samples,
+                FileDetails = detailedFiles,
+                FileDetailsTruncated = count > detailedFiles.Length,
                 SelectedByDefault = root.SelectedByDefault && root.SafetyLevel == SafetyLevel.Safe,
             });
         }
@@ -108,10 +146,40 @@ public abstract class DirectoryCleanerModule : ICleanerModule
         // the whole point of this cleaner is to run on machines that are already short on memory.
         const int ChunkSize = 512;
         var buffer = new List<FileEntry>(ChunkSize);
+        var cleanupRoot = new ScanRoot(
+            context.Item.RootPath,
+            context.Item.Title,
+            context.Item.Description,
+            context.Item.SafetyLevel,
+            context.Item.SelectedByDefault,
+            context.Item.MinimumAge,
+            context.Item.Recursive);
 
-        foreach (var file in context.FileSystem.EnumerateFiles(context.Item.RootPath, recursive: true))
+        var selectedDetails = context.SelectedFileDetails;
+        var unvisitedSelections = selectedDetails is null
+            ? null
+            : new HashSet<string>(selectedDetails.Keys, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in context.FileSystem.EnumerateFiles(context.Item.RootPath, cleanupRoot.Recursive))
         {
             options.CancellationToken.ThrowIfCancellationRequested();
+
+            FileEntry? expected = null;
+            if (selectedDetails is not null)
+            {
+                if (!selectedDetails.TryGetValue(file.FullName, out var scannedFile))
+                {
+                    continue;
+                }
+
+                expected = scannedFile;
+                unvisitedSelections!.Remove(file.FullName);
+            }
+            else if (!Include(file, cleanupRoot, context.ScanTimestampUtc))
+            {
+                continue;
+            }
+
             buffer.Add(file);
 
             if (buffer.Count < ChunkSize)
@@ -126,6 +194,14 @@ public abstract class DirectoryCleanerModule : ICleanerModule
         if (buffer.Count > 0)
         {
             Parallel.ForEach(buffer, options, ProcessOne);
+        }
+
+        if (unvisitedSelections is not null)
+        {
+            foreach (var missing in unvisitedSelections)
+            {
+                results.Add(new CleanupItemResult(missing, CleanupOutcome.NotFound, "El archivo ya no está disponible."));
+            }
         }
 
         return Task.FromResult(new CleanupResult
@@ -154,8 +230,16 @@ public abstract class DirectoryCleanerModule : ICleanerModule
                 return;
             }
 
+            if (selectedDetails is not null && selectedDetails.TryGetValue(file.FullName, out var scannedFile) &&
+                (file.Length != scannedFile.Length || file.LastWriteUtc != scannedFile.LastWriteUtc))
+            {
+                results.Add(new CleanupItemResult(file.FullName, CleanupOutcome.ChangedSinceScan,
+                    "El archivo cambió desde el análisis; se conserva."));
+                return;
+            }
+
             // A file that appeared or changed after the scan is not the file we inspected.
-            if (file.LastWriteUtc > context.ScanTimestampUtc.UtcDateTime.AddMinutes(5))
+            if (selectedDetails is null && file.LastWriteUtc > context.ScanTimestampUtc.UtcDateTime.AddMinutes(5))
             {
                 results.Add(new CleanupItemResult(file.FullName, CleanupOutcome.ChangedSinceScan));
                 return;
@@ -172,6 +256,15 @@ public abstract class DirectoryCleanerModule : ICleanerModule
                 context.Gate.Delete(file.FullName);
                 Interlocked.Add(ref freed[0], file.Length);
                 results.Add(new CleanupItemResult(file.FullName, CleanupOutcome.Deleted));
+            }
+            catch (CleanupRejectedException ex)
+            {
+                results.Add(new CleanupItemResult(file.FullName, ex.Decision switch
+                {
+                    CleanupDecision.Excluded => CleanupOutcome.Excluded,
+                    CleanupDecision.NotFound => CleanupOutcome.NotFound,
+                    _ => CleanupOutcome.SkippedAccessDenied,
+                }, ex.Message));
             }
             catch (UnauthorizedAccessException ex)
             {

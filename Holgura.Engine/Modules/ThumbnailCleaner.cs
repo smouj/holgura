@@ -26,7 +26,12 @@ public sealed class ThumbnailCleaner : DirectoryCleanerModule
             Recursive: false);
     }
 
-    protected override bool Include(FileEntry file, ScanRoot root, ScanContext context) =>
-        Path.GetFileName(file.FullName).StartsWith("thumbcache_", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Path.GetFileName(file.FullName), "iconcache.db", StringComparison.OrdinalIgnoreCase);
+    protected override bool Include(FileEntry file, ScanRoot root, DateTimeOffset asOfUtc)
+    {
+        var fileName = Path.GetFileName(file.FullName);
+        return ((fileName.StartsWith("thumbcache_", StringComparison.OrdinalIgnoreCase) ||
+                 fileName.StartsWith("iconcache_", StringComparison.OrdinalIgnoreCase)) &&
+                fileName.EndsWith(".db", StringComparison.OrdinalIgnoreCase)) ||
+               string.Equals(fileName, "iconcache.db", StringComparison.OrdinalIgnoreCase);
+    }
 }

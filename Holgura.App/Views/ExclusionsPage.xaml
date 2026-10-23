@@ -5,7 +5,7 @@
       Background="Transparent"
       FontFamily="Segoe UI Variable Text, Segoe UI">
 
-    <Grid Margin="32,26,32,24">
+    <Grid x:Name="ContentRoot" Margin="32,26,32,24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />

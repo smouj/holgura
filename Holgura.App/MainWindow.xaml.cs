@@ -29,6 +29,10 @@ public partial class MainWindow : Window
         {
             NavFrame.Navigate(new HistoryPage());
         }
+        else if (sender == NavApps)
+        {
+            NavFrame.Navigate(new InstalledAppsPage());
+        }
         else if (sender == NavExclusions)
         {
             NavFrame.Navigate(new ExclusionsPage());

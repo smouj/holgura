@@ -5,8 +5,8 @@ using Holgura.Contracts;
 namespace Holgura.Platform.Windows;
 
 /// <summary>
-/// Runs WSL through argument lists (never a shell string), decodes its UTF-16/UTF-8 output and
-/// keeps a hard timeout so a stuck distro cannot freeze the scan.
+/// Runs WSL through argument lists and standard input (never a composed command line), decodes its
+/// UTF-16/UTF-8 output and keeps a hard timeout so a stuck distro cannot freeze the scan.
 /// </summary>
 public sealed class WslCliBridge : IWslBridge
 {
@@ -73,7 +73,7 @@ public sealed class WslCliBridge : IWslBridge
 
     public async Task<IReadOnlyList<WslUsage>> MeasureAsync(string distro, CancellationToken cancellationToken = default)
     {
-        var (exit, output, error) = await RunAsync(["-d", distro, "--", "bash", "-lc", MeasureScript], cancellationToken).ConfigureAwait(false);
+        var (exit, output, error) = await RunScriptAsync(distro, MeasureScript, cancellationToken).ConfigureAwait(false);
         if (exit != 0)
         {
             // Never report "nothing to clean" when the truth is "could not look".
@@ -108,17 +108,27 @@ public sealed class WslCliBridge : IWslBridge
             return -1;
         }
 
-        var (exit, _, _) = await RunAsync(["-d", distro, "--", "bash", "-lc", command], cancellationToken).ConfigureAwait(false);
+        var (exit, _, _) = await RunScriptAsync(distro, command, cancellationToken).ConfigureAwait(false);
         return exit;
     }
 
-    private static async Task<(int Exit, string Output, string Error)> RunAsync(string[] arguments, CancellationToken cancellationToken)
+    private static Task<(int Exit, string Output, string Error)> RunScriptAsync(
+        string distro,
+        string script,
+        CancellationToken cancellationToken) =>
+        RunAsync(["-d", distro, "--", "bash", "-s"], cancellationToken, script);
+
+    private static async Task<(int Exit, string Output, string Error)> RunAsync(
+        string[] arguments,
+        CancellationToken cancellationToken,
+        string? standardInput = null)
     {
         var info = new ProcessStartInfo
         {
             FileName = "wsl.exe",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = standardInput is not null,
             UseShellExecute = false,
             CreateNoWindow = true,
             StandardOutputEncoding = null,
@@ -142,6 +152,14 @@ public sealed class WslCliBridge : IWslBridge
         {
             var stdout = process.StandardOutput.ReadToEndAsync(timeout.Token);
             var stderr = process.StandardError.ReadToEndAsync(timeout.Token);
+            if (standardInput is not null)
+            {
+                var normalizedScript = standardInput.Replace("\r\n", "\n", StringComparison.Ordinal)
+                    .Replace('\r', '\n');
+                await process.StandardInput.WriteAsync(normalizedScript.AsMemory(), timeout.Token).ConfigureAwait(false);
+                process.StandardInput.Close();
+            }
+
             await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
             return (process.ExitCode, Decode(await stdout.ConfigureAwait(false)), Decode(await stderr.ConfigureAwait(false)));
         }

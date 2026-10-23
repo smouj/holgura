@@ -32,13 +32,17 @@ public static class ThemeService
         resources["Accent"] = Brush("#4C8DFF");
         resources["AccentHover"] = Brush("#6BA0FF");
         resources["AccentText"] = Brush("#0B0C0E");
+        resources["AccentSoft"] = Brush("#202D45");
+        resources["Warning"] = Brush("#F6C177");
+        resources["Danger"] = Brush("#CF6679");
+        resources["DangerHover"] = Brush("#B75568");
     }
 
     private static BitmapImage LoadLogo(string assetName)
     {
         var image = new BitmapImage();
         image.BeginInit();
-        image.UriSource = new Uri($"pack://application:,,,/Holgura.App;component/assets/{assetName}", UriKind.Absolute);
+        image.UriSource = new Uri($"pack://application:,,,/Holgura.App;component/Assets/{assetName}", UriKind.Absolute);
         image.CacheOption = BitmapCacheOption.OnLoad;
         image.EndInit();
         image.Freeze();

@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Espacio para respirar.</strong><br/>
-  Limpiador para Windows y WSL que te enseña cada archivo antes de borrarlo.
+  Limpiador para Windows y WSL que enseña los archivos, rutas y tamaños antes de borrarlos.
 </p>
 
 <p align="center">
@@ -29,7 +29,10 @@ cada categoría, su tamaño, su ruta y el motivo por el que puede irse.
 - Las raíces críticas (unidades, `Windows`, `Program Files`, tu perfil, Documentos, Escritorio) nunca pueden ser raíz de borrado.
 - Los junctions y puntos de reanálisis no se siguen jamás.
 - Un archivo bloqueado se omite y se reporta; no es fatal.
-- Nada se borra hasta que pulsas el botón, y **Simular limpieza** enseña el plan antes.
+- Los grupos se muestran con tamaño, riesgo y número de archivos; puedes revisar y marcar varios archivos concretos.
+- **Simular** enseña el plan sin borrar nada; **Eliminar selección** pide confirmación y vuelve a comprobar cada archivo.
+- Project Infest queda protegido en el análisis y en la puerta de borrado; sus rutas y aplicaciones no se pueden seleccionar.
+- El panel muestra el espacio libre y usado de las unidades fijas disponibles.
 
 ## Qué limpia
 
@@ -44,10 +47,25 @@ cada categoría, su tamaño, su ruta y el motivo por el que puede irse.
 | Papelera de reciclaje | Revisar | Nunca preseleccionada; se vacía por la API del shell |
 | Cachés dentro de WSL | Seguro / Revisar | apt, journald, pip, npm, uv por distro |
 
+La vista de archivos conserva los 2.000 archivos más grandes por zona para que el análisis no
+consuma memoria sin límite. Cuando una zona tiene más archivos, se indica cuántos quedan fuera de
+la vista; seleccionar la zona completa incluye todos sus candidatos. La selección individual solo
+alcanza los archivos visibles y compara tamaño y fecha con el análisis antes de borrar.
+
+## Aplicaciones y juegos instalados
+
+La pestaña **Aplicaciones** lee las entradas de desinstalación de Windows para el equipo y el
+usuario actual, incluidas las vistas de registro de 32 y 64 bits. Muestra editor, versión, tamaño
+estimado y ruta de instalación cuando Windows los informa. La desinstalación abre el desinstalador
+oficial de cada programa con su interfaz normal; Holgura nunca borra manualmente una carpeta de
+programa. Los componentes del sistema se ocultan y las entradas de Project Infest quedan bloqueadas.
+Los desinstaladores que dependen de scripts o intérpretes de comandos se bloquean por seguridad.
+Las aplicaciones de Microsoft Store se administran desde el botón que abre Configuración de Windows.
+
 ### Lo que nunca toca
 
 Cookies, historial, contraseñas, sesiones, extensiones, marcadores, descargas, documentos,
-proyectos, `Program Files` y cualquier ruta que añadas a la lista de exclusiones.
+proyectos, Project Infest, `Program Files` y cualquier ruta que añadas a la lista de exclusiones.
 
 ## Modelo de seguridad
 
@@ -58,9 +76,10 @@ ESCANEAR -> VALIDAR -> SELECCIONAR -> VALIDACIÓN PREVIA -> BORRAR -> VERIFICAR 
 1. Un módulo solo declara un directorio raíz. Nunca recibe permiso de borrado.
 2. `PathSafetyValidator` rechaza raíces de unidad, carpetas protegidas y cualquier raíz que las contenga.
 3. `CleanupGate` revalida contención, exclusiones, puntos de reanálisis y existencia justo antes de borrar.
-4. Un archivo más nuevo que el escaneo (más 5 minutos de margen) se marca `ChangedSinceScan`.
-5. Un fallo en un archivo se registra y la operación continúa.
-6. Los candidatos se procesan en lotes de 512 para no inflar la memoria en equipos ya justos.
+4. Cada archivo individual seleccionado se compara por ruta, tamaño y fecha con la vista previa; si cambió, se conserva.
+5. Un archivo más nuevo que el escaneo (más 5 minutos de margen) se marca `ChangedSinceScan`.
+6. Un fallo en un archivo se registra y la operación continúa.
+7. Los candidatos se procesan en lotes de 512 para no inflar la memoria en equipos ya justos.
 
 La papelera y WSL son `DeletionScope.External`: el motor les entrega una puerta que **rechaza**
 cualquier borrado de archivo, y solo pueden ejecutar su propia operación acotada.
@@ -70,7 +89,7 @@ cualquier borrado de archivo, y solo pueden ejecutar su propia operación acotad
 Windows no ve dentro de `ext4.vhdx`, así que WSL va por su propio camino:
 
 - `IWslBridge` ejecuta `wsl.exe` con lista de argumentos, nunca una cadena de shell compuesta.
-- La medición es un único script `bash -lc` que informa bytes y número de archivos por caché.
+- La medición envía un script fijo por la entrada estándar de Bash para evitar problemas de comillas y finales de línea entre Windows y WSL; informa bytes y número de archivos por caché.
 - Una medición fallida **es un error**, no un resultado vacío: la app nunca dice "no hay nada" cuando no pudo mirar.
 - La limpieza solo ejecuta recetas fijas de `WslRecipes`; lo que no está en la lista se resuelve a `null` y falla cerrado.
 - Las cachés de usuario se limpian directamente; `apt` y `journald` exigen `sudo` sin contraseña y se reportan cuando no está.
@@ -94,24 +113,24 @@ Requiere el SDK de .NET 10 en Windows.
 ```powershell
 dotnet restore
 dotnet build -c Release
-dotnet test -c Release
-dotnet publish src/Holgura.App/Holgura.App.csproj -c Release -r win-x64 --self-contained true
+dotnet test tests/Holgura.Core.Tests/Holgura.Core.Tests.csproj -c Release
+dotnet test tests/Holgura.Engine.Tests/Holgura.Engine.Tests.csproj -c Release
+dotnet publish Holgura.App/Holgura.App.csproj -c Release -r win-x64 --self-contained true
 ```
 
 ## Arquitectura
 
 ```
-src/
-  Holgura.Contracts/          Interfaces, resultados y niveles de seguridad. Sin dependencias.
-  Holgura.Core/               PathSafetyValidator, exclusiones, historial, formato.
-  Holgura.Engine/             Pipeline de escaneo/limpieza, CleanupGate, módulos.
-  Holgura.Platform.Windows/   Sistema de ficheros, puente WSL, papelera, rutas.
-  Holgura.App/                Shell de escritorio (WPF, MVVM).
+Holgura.Contracts/            Interfaces, resultados y niveles de seguridad. Sin dependencias.
+Holgura.Core/                 PathSafetyValidator, exclusiones, historial, formato.
+Holgura.Engine/               Pipeline de escaneo/limpieza, CleanupGate, módulos.
+Holgura.Platform.Windows/     Sistema de ficheros, puente WSL, papelera, rutas.
+Holgura.App/                  Shell de escritorio (WPF, MVVM), espacio y aplicaciones.
+assets/                       Logos para tema claro/oscuro e icono de Windows.
 tests/
   Holgura.Core.Tests/
   Holgura.Engine.Tests/
-tools/
-  SmokeTest/                  Escaneo y simulación sin interfaz contra la máquina real.
+tools/SmokeTest/              Escaneo y simulación sin interfaz contra la máquina real.
 ```
 
 El motor no sabe nada de la interfaz, y la interfaz no sabe nada de las reglas de borrado.
@@ -123,24 +142,13 @@ vienen con el workload "Windows application development" de Visual Studio. La ca
 sobre .NET 10, que compila solo con el SDK. Todo lo que hay debajo de `Holgura.App` es idéntico:
 cambiar de shell es un cambio de un solo proyecto.
 
-## Verificado en hardware real
+## Verificación
 
-```
-== SCAN ==
-items=3  files=985  bytes=805 MB  (3.5 s)  warnings=0
-  514.0 MB | Review | C:\WINDOWS\Temp
-  153.4 MB | Safe   | ...\Windows\Explorer (miniaturas)
-  100.2 MB | Safe   | ...\AppData\Local\Temp
-
-== DRY RUN ==
-wouldDelete=1,002  skipped=0  errors=0  (0.7 s)
-
-== SAFETY ==
-rechaza C:\, C:\Windows, C:\Program Files, C:\Users\<usuario>, Documentos
-```
-
-27 tests unitarios cubren el validador, las exclusiones y el motor: archivos bloqueados, puntos de
-reanálisis, raíces protegidas, simulaciones, cancelación y filtros de antigüedad.
+36 pruebas unitarias (18 de Core y 18 de Engine) cubren el validador y el motor: archivos
+bloqueados o modificados, puntos de reanálisis, raíces protegidas, simulaciones, cancelación,
+selección individual y protección de Project Infest. `tools/SmokeTest` ejecuta un escaneo local y
+una simulación sin borrar archivos.
+Los resultados de espacio varían según el equipo y no se publican en este README.
 
 ## Hoja de ruta
 

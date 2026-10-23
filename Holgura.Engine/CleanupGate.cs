@@ -20,11 +20,22 @@ public sealed class CleanupGate : ICleanupGate
         _exclusions = exclusions;
         _fileSystem = fileSystem;
         _root = root;
+
+        if (ProtectedPathPolicy.IsProjectInfestPath(root))
+        {
+            throw new ProtectedPathException(root, "Project Infest paths are protected");
+        }
+
         _validator.EnsureSafeRoot(root);
     }
 
     public CleanupDecision Evaluate(string filePath)
     {
+        if (ProtectedPathPolicy.IsProjectInfestPath(filePath))
+        {
+            return CleanupDecision.Excluded;
+        }
+
         try
         {
             _validator.EnsureContained(_root, filePath);
@@ -54,7 +65,18 @@ public sealed class CleanupGate : ICleanupGate
 
     public void Delete(string filePath)
     {
-        _validator.EnsureContained(_root, filePath);
+        var decision = Evaluate(filePath);
+        if (decision != CleanupDecision.Allow)
+        {
+            throw new CleanupRejectedException(decision);
+        }
+
         _fileSystem.DeleteFile(filePath);
     }
+}
+
+internal sealed class CleanupRejectedException(CleanupDecision decision)
+    : InvalidOperationException($"Deletion was rejected by the safety gate: {decision}.")
+{
+    public CleanupDecision Decision { get; } = decision;
 }

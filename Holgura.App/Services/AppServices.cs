@@ -9,12 +9,18 @@ namespace Holgura.App.Services;
 /// <summary>Composition root; the only place that knows about concrete Windows implementations.</summary>
 public sealed class AppServices
 {
-    private AppServices(CleanerEngine engine, ExclusionService exclusions, IHistoryStore history, MainViewModel main)
+    private AppServices(
+        CleanerEngine engine,
+        ExclusionService exclusions,
+        IHistoryStore history,
+        MainViewModel main,
+        InstalledAppsViewModel installedApps)
     {
         Engine = engine;
         Exclusions = exclusions;
         History = history;
         Main = main;
+        InstalledApps = installedApps;
     }
 
     public CleanerEngine Engine { get; }
@@ -25,6 +31,8 @@ public sealed class AppServices
 
     public MainViewModel Main { get; }
 
+    public InstalledAppsViewModel InstalledApps { get; }
+
     public static AppServices Create()
     {
         var fileSystem = new WindowsFileSystem();
@@ -33,6 +41,9 @@ public sealed class AppServices
         var validator = PathSafetyValidator.CreateDefault();
         var bridge = new WslCliBridge();
         var recycleBin = new RecycleBinService();
+        var driveSpace = new DriveSpaceService();
+        var installedAppsService = new InstalledAppsService();
+        var uninstaller = new UninstallerService();
 
         var engine = new CleanerEngine(
             ModuleRegistry.CreateDefault(bridge, recycleBin),
@@ -41,7 +52,8 @@ public sealed class AppServices
             exclusions,
             history);
 
-        var main = new MainViewModel(engine, fileSystem, history);
-        return new AppServices(engine, exclusions, history, main);
+        var main = new MainViewModel(engine, fileSystem, history, driveSpace);
+        var installedApps = new InstalledAppsViewModel(installedAppsService, uninstaller);
+        return new AppServices(engine, exclusions, history, main, installedApps);
     }
 }
