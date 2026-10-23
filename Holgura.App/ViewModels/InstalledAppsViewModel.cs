@@ -17,7 +17,9 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     private readonly InstalledAppsService _service;
     private readonly UninstallerService _uninstaller;
+#if DEBUG
     private bool _isReadmePreview;
+#endif
 
     public InstalledAppsViewModel(InstalledAppsService service, UninstallerService uninstaller)
     {
@@ -40,7 +42,11 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isBusy;
 
+#if DEBUG
     public bool CanRefresh => !IsBusy && !_isReadmePreview;
+#else
+    public bool CanRefresh => !IsBusy;
+#endif
 
     [ObservableProperty]
     private string _statusText = "Actualiza la lista para detectar aplicaciones instaladas.";
@@ -106,10 +112,12 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
+#if DEBUG
         if (_isReadmePreview)
         {
             return;
         }
+#endif
 
         if (IsBusy)
         {
@@ -159,11 +167,13 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     public bool TryStartUninstaller(InstalledApplicationViewModel application, out string status)
     {
+#if DEBUG
         if (_isReadmePreview)
         {
             status = "La vista previa usa datos de ejemplo y no permite desinstalar aplicaciones.";
             return false;
         }
+#endif
 
         if (application is null || !Applications.Contains(application) || !application.IsSelected || !application.CanSelect || IsBusy)
         {
@@ -196,6 +206,7 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
         UpdateSelection();
     }
 
+#if DEBUG
     internal void LoadReadmePreview()
     {
         _isReadmePreview = true;
@@ -238,6 +249,7 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
         CurrentApplication = VisibleApplications.FirstOrDefault();
         UpdateSelection();
     }
+#endif
 
     private void ApplyFilter()
     {

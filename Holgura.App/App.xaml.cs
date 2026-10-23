@@ -29,7 +29,9 @@ public partial class App : Application
 
     public static AppServices Services { get; private set; } = null!;
 
+#if DEBUG
     internal static bool IsReadmeScreenshotMode { get; set; }
+#endif
 
     protected override void OnStartup(StartupEventArgs e)
     {

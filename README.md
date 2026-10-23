@@ -23,6 +23,7 @@
 ## Vista previa
 
 Las capturas usan datos ficticios; las acciones de limpieza y desinstalación están deshabilitadas.
+El modo de muestra solo se compila en Debug y no está incluido en la aplicación distribuida (Release).
 
 <p align="center">
   <img src="docs/screenshots/inicio.png" width="100%" alt="Inicio de Holgura con categorías y archivos ordenados por tamaño" />

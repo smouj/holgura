@@ -25,7 +25,9 @@ public sealed partial class MainViewModel : ObservableObject
     private DateTimeOffset? _scanTimestamp;
     private CancellationTokenSource? _activeOperation;
     private int _selectionBatchDepth;
+#if DEBUG
     private bool _isReadmePreview;
+#endif
 
     public MainViewModel(
         CleanerEngine engine,
@@ -130,11 +132,19 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ScanItemViewModel? _currentItem;
 
+#if DEBUG
     public bool CanScan => !IsBusy && !_isReadmePreview;
+#else
+    public bool CanScan => !IsBusy;
+#endif
 
     public bool CanCancel => IsBusy;
 
+#if DEBUG
     public bool CanClean => !_isReadmePreview && !IsBusy && SelectedFileCount > 0;
+#else
+    public bool CanClean => !IsBusy && SelectedFileCount > 0;
+#endif
 
     partial void OnIsBusyChanged(bool value)
     {
@@ -179,10 +189,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     public async Task ScanAsync(CancellationToken cancellationToken = default)
     {
+#if DEBUG
         if (_isReadmePreview)
         {
             return;
         }
+#endif
 
         if (IsBusy)
         {
@@ -214,10 +226,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     public async Task<string> CleanAsync(bool dryRun, CancellationToken cancellationToken = default)
     {
+#if DEBUG
         if (_isReadmePreview)
         {
             return "La vista previa usa datos de ejemplo y no permite borrar archivos.";
         }
+#endif
 
         var selected = SelectedItems;
         if (selected.Count == 0)
@@ -407,6 +421,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     public void CancelOperation() => _activeOperation?.Cancel();
 
+#if DEBUG
     internal void LoadReadmePreview()
     {
         _isReadmePreview = true;
@@ -487,6 +502,7 @@ public sealed partial class MainViewModel : ObservableObject
             FileDetails = entries,
         };
     }
+#endif
 
     private async Task ScanCoreAsync(CancellationToken cancellationToken)
     {
