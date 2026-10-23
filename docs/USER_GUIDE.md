@@ -20,7 +20,7 @@ No se selecciona nada automáticamente. Los elementos bloqueados por exclusiones
 
 ## Aplicaciones y juegos
 
-La pestaña **Aplicaciones** muestra programas que Windows registra en las claves de desinstalación del equipo o del usuario. Puedes buscar por nombre, editor o versión, ordenar por tamaño mayor a menor, menor a mayor o nombre, y revisar la ubicación y el tamaño estimado cuando Windows los informa. Las entradas sin tamaño quedan al final de ambos órdenes por tamaño.
+La pestaña **Aplicaciones** muestra programas que Windows registra en las claves de desinstalación del equipo o del usuario. Puedes buscar por nombre, editor o versión, filtrar por unidad de instalación, ordenar por tamaño mayor a menor, menor a mayor o nombre, y revisar la ubicación y el tamaño estimado cuando Windows los informa. La unidad se calcula a partir de la ruta de instalación que registra Windows; si no la informa, la app indica **Unidad no informada** en vez de adivinar. Al cambiar de unidad, se quita la selección de las aplicaciones que quedan ocultas. Las entradas sin tamaño quedan al final de ambos órdenes por tamaño.
 
 Para desinstalar, selecciona una o varias entradas habilitadas y confirma. Holgura abre sus desinstaladores oficiales de uno en uno; al terminar cada asistente, confirma si quieres iniciar el siguiente. Puedes detener la secuencia en cualquier momento. Holgura no borra manualmente las carpetas de los programas. Las entradas de Project Infest quedan bloqueadas. Si una entrada requiere un intérprete o script, Holgura la deja inhabilitada y explica que debe gestionarse desde Configuración de Windows.
 

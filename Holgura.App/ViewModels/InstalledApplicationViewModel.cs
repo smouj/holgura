@@ -1,3 +1,4 @@
+using System.IO;
 using Holgura.App.Services;
 using Holgura.Core;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -28,6 +29,8 @@ public sealed partial class InstalledApplicationViewModel : ObservableObject
 
     public string InstallLocation => Application.InstallLocation;
 
+    public string DriveText => GetDriveText(Application.InstallLocation);
+
     public string ProtectionText => Application.IsProjectInfestProtected ? "Protegido · Project Infest" : Application.CanUninstall ? "Desinstalador disponible" : Application.UninstallBlockedReason ?? "No se puede desinstalar desde Holgura";
 
     public bool CanSelect => !Application.IsProjectInfestProtected && Application.CanUninstall;
@@ -36,4 +39,29 @@ public sealed partial class InstalledApplicationViewModel : ObservableObject
     private bool _isSelected;
 
     partial void OnIsSelectedChanged(bool value) => _onSelectionChanged();
+
+    private static string GetDriveText(string installLocation)
+    {
+        if (string.IsNullOrWhiteSpace(installLocation))
+        {
+            return "Unidad no informada";
+        }
+
+        var path = Environment.ExpandEnvironmentVariables(installLocation.Trim().Trim('"'));
+        if (path.StartsWith("\\\\?\\UNC\\", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("\\\\", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Red";
+        }
+
+        if (path.StartsWith("\\\\?\\", StringComparison.OrdinalIgnoreCase))
+        {
+            path = path[4..];
+        }
+
+        return path.Length >= 3 && char.IsLetter(path[0]) && path[1] == ':' &&
+               (path[2] == '\\' || path[2] == '/')
+            ? path[..2].ToUpperInvariant()
+            : "Unidad no informada";
+    }
 }

@@ -34,6 +34,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Grid>
                 <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"
@@ -56,11 +57,16 @@
                     </TextBlock.Style>
                 </TextBlock>
             </Grid>
-            <ComboBox Grid.Column="1" ItemsSource="{Binding SortModes}"
+            <ComboBox Grid.Column="1" ItemsSource="{Binding DriveFilterOptions}"
+                      SelectedItem="{Binding DriveFilter, Mode=TwoWay}"
+                      Style="{StaticResource CompactComboBox}" Width="150" Margin="12,0,0,0"
+                      ToolTip="Filtrar aplicaciones por unidad de instalación"
+                      AutomationProperties.Name="Filtrar aplicaciones por unidad" />
+            <ComboBox Grid.Column="2" ItemsSource="{Binding SortModes}"
                       SelectedItem="{Binding SortMode, Mode=TwoWay}"
-                      Style="{StaticResource CompactComboBox}" Width="164" Margin="12,0,0,0"
+                      Style="{StaticResource CompactComboBox}" Width="164" Margin="8,0,0,0"
                       ToolTip="Ordenar aplicaciones por tamaño o nombre" />
-            <TextBlock Grid.Column="2" Text="{Binding VisibleCountText}" Style="{StaticResource Caption}"
+            <TextBlock Grid.Column="3" Text="{Binding VisibleCountText}" Style="{StaticResource Caption}"
                        VerticalAlignment="Center" Margin="14,0,0,0" />
         </Grid>
 
@@ -102,7 +108,7 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid MinHeight="54" Margin="2">
+                                <Grid MinHeight="62" Margin="2">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="28" />
                                         <ColumnDefinition Width="*" />
@@ -121,6 +127,7 @@
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                                         <TextBlock Text="{Binding SizeText}" Style="{StaticResource BodyStrong}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding DriveText}" Style="{StaticResource Tiny}" HorizontalAlignment="Right" />
                                         <TextBlock Text="{Binding VersionText}" Style="{StaticResource Tiny}" HorizontalAlignment="Right" />
                                     </StackPanel>
                                 </Grid>

@@ -6,6 +6,8 @@ namespace Holgura.App.ViewModels;
 
 public sealed partial class InstalledAppsViewModel : ObservableObject
 {
+    private const string AllDrivesFilter = "Todas las unidades";
+
     private static readonly string[] ApplicationSortOptions =
     [
         "Tamaño: mayor a menor",
@@ -29,6 +31,12 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     public IReadOnlyList<string> SortModes => ApplicationSortOptions;
 
+    public IReadOnlyList<string> DriveFilterOptions => new[] { AllDrivesFilter }
+        .Concat(Applications.Select(application => application.DriveText)
+            .Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .OrderBy(drive => drive, StringComparer.CurrentCultureIgnoreCase))
+        .ToArray();
+
     [ObservableProperty]
     private bool _isBusy;
 
@@ -42,6 +50,9 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _sortMode = ApplicationSortOptions[0];
+
+    [ObservableProperty]
+    private string _driveFilter = AllDrivesFilter;
 
     [ObservableProperty]
     private string _totalText = "—";
@@ -69,6 +80,16 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
     partial void OnFilterTextChanged(string value) => ApplyFilter();
 
     partial void OnSortModeChanged(string value) => ApplyFilter();
+
+    partial void OnDriveFilterChanged(string value)
+    {
+        foreach (var application in Applications.Where(application => application.IsSelected && !MatchesDrive(application)))
+        {
+            application.IsSelected = false;
+        }
+
+        ApplyFilter();
+    }
 
     partial void OnIsBusyChanged(bool value)
     {
@@ -105,6 +126,12 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
             foreach (var application in scan.Applications)
             {
                 Applications.Add(new InstalledApplicationViewModel(application, UpdateSelection));
+            }
+
+            OnPropertyChanged(nameof(DriveFilterOptions));
+            if (!DriveFilterOptions.Contains(DriveFilter, StringComparer.CurrentCultureIgnoreCase))
+            {
+                DriveFilter = AllDrivesFilter;
             }
 
             _scanWarningText = scan.Warnings.Count == 0
@@ -184,11 +211,11 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
                 "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
             new InstalledApplication(
                 "DEMO\\PhotoViewer", "Visor de imágenes de ejemplo", "2.8", "Estudio de ejemplo",
-                @"C:\Holgura Demo\Apps\PhotoViewer", string.Empty, 1_240L * 1024 * 1024,
+                @"D:\Holgura Demo\Apps\PhotoViewer", string.Empty, 1_240L * 1024 * 1024,
                 "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
             new InstalledApplication(
                 "DEMO\\PuzzleGame", "Juego de ejemplo", "1.0", "Desarrollador de ejemplo",
-                @"C:\Holgura Demo\Apps\PuzzleGame", string.Empty, 620L * 1024 * 1024,
+                @"D:\Holgura Demo\Apps\PuzzleGame", string.Empty, 620L * 1024 * 1024,
                 "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
             new InstalledApplication(
                 "DEMO\\SmallTool", "Herramienta pequeña de ejemplo", "3.1", "Holgura Demo",
@@ -201,6 +228,8 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
             Applications.Add(new InstalledApplicationViewModel(application, UpdateSelection));
         }
 
+        OnPropertyChanged(nameof(DriveFilterOptions));
+        DriveFilter = AllDrivesFilter;
         TotalText = $"{Applications.Count:N0} aplicaciones de ejemplo";
         StatusText = "Vista previa para documentación. Lista ficticia; desinstalación deshabilitada.";
         FilterText = string.Empty;
@@ -215,10 +244,11 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
         VisibleApplications.Clear();
         var query = FilterText.Trim();
         var matchingApplications = Applications.Where(application =>
-                     query.Length == 0 ||
-                     application.DisplayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                     application.PublisherText.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                     application.VersionText.Contains(query, StringComparison.CurrentCultureIgnoreCase));
+                     MatchesDrive(application) &&
+                     (query.Length == 0 ||
+                      application.DisplayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                      application.PublisherText.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
+                      application.VersionText.Contains(query, StringComparison.CurrentCultureIgnoreCase)));
         matchingApplications = SortMode switch
         {
             "Tamaño: menor a mayor" => matchingApplications
@@ -259,15 +289,19 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
             : "Desinstalar aplicación";
     }
 
-    public string VisibleCountText => FilterText.Trim().Length == 0
+    public string VisibleCountText => FilterText.Trim().Length == 0 && DriveFilter == AllDrivesFilter
         ? $"{Applications.Count:N0} aplicaciones"
         : $"{VisibleApplications.Count:N0} de {Applications.Count:N0} aplicaciones";
+
+    private bool MatchesDrive(InstalledApplicationViewModel application) =>
+        DriveFilter == AllDrivesFilter ||
+        string.Equals(application.DriveText, DriveFilter, StringComparison.CurrentCultureIgnoreCase);
 
     private static string BuildDetails(InstalledApplicationViewModel application)
     {
         var model = application.Application;
         var location = string.IsNullOrWhiteSpace(model.InstallLocation) ? "Windows no informó la carpeta de instalación." : model.InstallLocation;
         var publisher = string.IsNullOrWhiteSpace(model.Publisher) ? "Editor no informado" : model.Publisher;
-        return $"{model.DisplayName}\n{model.VersionText} · {publisher}\n{model.SizeText} · {model.Scope}\n\nUbicación\n{location}\n\n{application.ProtectionText}";
+        return $"{model.DisplayName}\n{model.VersionText} · {publisher}\n{model.SizeText} · {application.DriveText} · {model.Scope}\n\nUbicación\n{location}\n\n{application.ProtectionText}";
     }
 }

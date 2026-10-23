@@ -9,6 +9,7 @@
 - Inicio ejecuta un análisis de solo lectura al abrirse para mostrar el estado disponible desde el primer momento.
 - Lista virtualizada de archivos por categoría, con rutas, tamaños, fechas y selección individual de varios archivos.
 - Orden de archivos y programas por tamaño ascendente/descendente o por nombre; los elementos sin tamaño informado quedan al final.
+- Las aplicaciones se pueden filtrar por unidad de instalación; las rutas que Windows no informa se muestran como desconocidas, sin suponer un disco.
 - Vista previa limitada a los 2.000 archivos mayores por zona; el análisis conserva las cifras agregadas exactas.
 - Simulación en pantalla, confirmación explícita y estado de operación; análisis y limpieza no bloquean la interfaz.
 - Navegación e interacción con transiciones suaves y estados de carga.

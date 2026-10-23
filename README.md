@@ -69,8 +69,9 @@ alcanza los archivos visibles y compara tamaño y fecha con el análisis antes d
 
 La pestaña **Aplicaciones** lee las entradas de desinstalación de Windows para el equipo y el
 usuario actual, incluidas las vistas de registro de 32 y 64 bits. Muestra editor, versión, tamaño
-estimado y ruta de instalación cuando Windows los informa. Puedes ordenar por tamaño o nombre y
-filtrar por nombre, editor o versión. Puedes seleccionar varias aplicaciones; Holgura abre sus
+estimado y ruta de instalación cuando Windows los informa. Puedes ordenar por tamaño o nombre,
+filtrar por nombre, editor, versión o unidad y ver en qué disco está cada entrada. Si Windows no
+indica una ruta, aparece como **Unidad no informada**. Puedes seleccionar varias aplicaciones; Holgura abre sus
 desinstaladores oficiales uno a uno y te pide confirmar antes de continuar con el siguiente. La
 secuencia se puede detener, y Holgura nunca borra manualmente una carpeta de programa. Los
 componentes del sistema se ocultan y las entradas de Project Infest quedan bloqueadas.
