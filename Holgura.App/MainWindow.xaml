@@ -5,48 +5,49 @@
         Icon="{DynamicResource BrandLogo}"
         Width="1360"
         Height="860"
-        MinWidth="1080"
-        MinHeight="680"
+        MinWidth="760"
+        MinHeight="560"
+        SizeChanged="OnWindowSizeChanged"
         Background="{DynamicResource AppBackground}"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="Manual"
         FontFamily="Segoe UI Variable Text, Segoe UI">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="228" />
+            <ColumnDefinition x:Name="SidebarColumn" Width="228" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <Border Grid.Column="0" Background="{DynamicResource Surface}" BorderBrush="{DynamicResource BorderSoft}" BorderThickness="0,0,1,0">
-            <StackPanel Margin="16,26,16,16">
-                <StackPanel Orientation="Horizontal" Margin="8,0,0,20">
+            <StackPanel x:Name="SidebarContent" Margin="16,26,16,16">
+                <StackPanel x:Name="BrandHeader" Orientation="Horizontal" Margin="8,0,0,20">
                     <Image Source="{DynamicResource BrandLogo}" Width="32" Height="32" Stretch="Uniform" />
-                    <TextBlock Text="Holgura" Style="{StaticResource H1}" Margin="10,0,0,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="BrandName" Text="Holgura" Style="{StaticResource H1}" Margin="10,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
                 <RadioButton x:Name="NavHome" Style="{StaticResource NavButton}" IsChecked="True" Checked="OnNav" ToolTip="Inicio">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
-                        <TextBlock Text="Inicio" />
+                        <TextBlock x:Name="NavHomeIcon" Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
+                        <TextBlock x:Name="NavHomeLabel" Text="Inicio" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton x:Name="NavApps" Style="{StaticResource NavButton}" Checked="OnNav" ToolTip="Aplicaciones instaladas">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE71D;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
-                        <TextBlock Text="Aplicaciones" />
+                        <TextBlock x:Name="NavAppsIcon" Text="&#xE71D;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
+                        <TextBlock x:Name="NavAppsLabel" Text="Aplicaciones" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton x:Name="NavHistory" Style="{StaticResource NavButton}" Checked="OnNav" ToolTip="Historial">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
-                        <TextBlock Text="Historial" />
+                        <TextBlock x:Name="NavHistoryIcon" Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
+                        <TextBlock x:Name="NavHistoryLabel" Text="Historial" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton x:Name="NavExclusions" Style="{StaticResource NavButton}" Checked="OnNav" ToolTip="Exclusiones">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
-                        <TextBlock Text="Exclusiones" />
+                        <TextBlock x:Name="NavExclusionsIcon" Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" />
+                        <TextBlock x:Name="NavExclusionsLabel" Text="Exclusiones" />
                     </StackPanel>
                 </RadioButton>
-                <TextBlock Text="Todo el análisis ocurre en este equipo. Nada se envía fuera."
+                <TextBlock x:Name="PrivacyNote" Text="Todo el análisis ocurre en este equipo. Nada se envía fuera."
                            Style="{StaticResource Tiny}" Margin="8,32,8,0" TextWrapping="Wrap" />
             </StackPanel>
         </Border>

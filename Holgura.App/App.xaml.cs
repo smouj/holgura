@@ -29,6 +29,8 @@ public partial class App : Application
 
     public static AppServices Services { get; private set; } = null!;
 
+    internal static bool IsReadmeScreenshotMode { get; set; }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         Log("OnStartup: begin");

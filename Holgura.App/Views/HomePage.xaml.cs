@@ -20,6 +20,12 @@ public partial class HomePage : Page
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         PageAnimations.FadeIn(ContentRoot);
+        if (App.IsReadmeScreenshotMode)
+        {
+            ViewModel.LoadReadmePreview();
+            return;
+        }
+
         await ViewModel.InitializeAsync();
         if (!ViewModel.HasScanned)
         {

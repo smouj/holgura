@@ -11,6 +11,12 @@ namespace Holgura.App.ViewModels;
 public sealed partial class MainViewModel : ObservableObject
 {
     private static readonly IReadOnlyList<ScanFileViewModel> NoFiles = Array.Empty<ScanFileViewModel>();
+    private static readonly string[] FileSortOptions =
+    [
+        "Tamaño: mayor a menor",
+        "Tamaño: menor a mayor",
+        "Nombre: A a Z",
+    ];
 
     private readonly CleanerEngine _engine;
     private readonly IFileSystem _fileSystem;
@@ -19,6 +25,7 @@ public sealed partial class MainViewModel : ObservableObject
     private DateTimeOffset? _scanTimestamp;
     private CancellationTokenSource? _activeOperation;
     private int _selectionBatchDepth;
+    private bool _isReadmePreview;
 
     public MainViewModel(
         CleanerEngine engine,
@@ -45,7 +52,27 @@ public sealed partial class MainViewModel : ObservableObject
 
     public bool HasScanned => _scanTimestamp is not null;
 
-    public IReadOnlyList<ScanFileViewModel> CurrentFiles => CurrentItem?.Files ?? NoFiles;
+    public IReadOnlyList<string> FileSortModes => FileSortOptions;
+
+    public IReadOnlyList<ScanFileViewModel> CurrentFiles
+    {
+        get
+        {
+            if (CurrentItem is null)
+            {
+                return NoFiles;
+            }
+
+            return FileSortMode switch
+            {
+                "Tamaño: menor a mayor" => CurrentItem.Files.OrderBy(file => file.Entry.Length)
+                    .ThenBy(file => file.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+                "Nombre: A a Z" => CurrentItem.Files.OrderBy(file => file.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+                _ => CurrentItem.Files.OrderByDescending(file => file.Entry.Length)
+                    .ThenBy(file => file.Name, StringComparer.CurrentCultureIgnoreCase).ToArray(),
+            };
+        }
+    }
 
     public string CurrentItemTitle => CurrentItem?.Title ?? "Elige una zona";
 
@@ -86,6 +113,9 @@ public sealed partial class MainViewModel : ObservableObject
     private string _selectedBytesText = "0 B";
 
     [ObservableProperty]
+    private string _fileSortMode = FileSortOptions[0];
+
+    [ObservableProperty]
     private string _operationSummary = string.Empty;
 
     [ObservableProperty]
@@ -100,11 +130,11 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ScanItemViewModel? _currentItem;
 
-    public bool CanScan => !IsBusy;
+    public bool CanScan => !IsBusy && !_isReadmePreview;
 
     public bool CanCancel => IsBusy;
 
-    public bool CanClean => !IsBusy && SelectedFileCount > 0;
+    public bool CanClean => !_isReadmePreview && !IsBusy && SelectedFileCount > 0;
 
     partial void OnIsBusyChanged(bool value)
     {
@@ -129,6 +159,8 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(DriveUsedPercent));
     }
 
+    partial void OnFileSortModeChanged(string value) => OnPropertyChanged(nameof(CurrentFiles));
+
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -147,6 +179,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     public async Task ScanAsync(CancellationToken cancellationToken = default)
     {
+        if (_isReadmePreview)
+        {
+            return;
+        }
+
         if (IsBusy)
         {
             return;
@@ -177,6 +214,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     public async Task<string> CleanAsync(bool dryRun, CancellationToken cancellationToken = default)
     {
+        if (_isReadmePreview)
+        {
+            return "La vista previa usa datos de ejemplo y no permite borrar archivos.";
+        }
+
         var selected = SelectedItems;
         if (selected.Count == 0)
         {
@@ -364,6 +406,87 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     public void CancelOperation() => _activeOperation?.Cancel();
+
+    internal void LoadReadmePreview()
+    {
+        _isReadmePreview = true;
+        OnPropertyChanged(nameof(CanScan));
+        OnPropertyChanged(nameof(CanClean));
+
+        Drives.Clear();
+        Drives.Add(new DriveSpaceSnapshot("C:", "Windows", 512L * 1024 * 1024 * 1024, 171L * 1024 * 1024 * 1024));
+        SelectedDrive = Drives[0];
+
+        var now = DateTime.UtcNow;
+        var previewItems = new[]
+        {
+            CreateReadmePreviewItem(
+                "browser-cache", "Caché de navegador", "Recursos descargables que el navegador puede volver a crear.",
+                @"C:\Holgura Demo\Caches\Navegador", ModuleCategory.Applications, SafetyLevel.Safe, now,
+                ("render-cache-014.bin", 1_240_000_000L), ("media-preview-082.dat", 768_000_000L),
+                ("web-assets-031.cache", 512_000_000L), ("image-cache-209.bin", 128_000_000L)),
+            CreateReadmePreviewItem(
+                "user-temp", "Temporales de usuario", "Restos temporales de aplicaciones cerradas.",
+                @"C:\Holgura Demo\Temporales", ModuleCategory.System, SafetyLevel.Safe, now,
+                ("session-cache-052.tmp", 128_000_000L), ("installer-fragment-008.tmp", 97_000_000L),
+                ("thumbnail-work-041.tmp", 54_000_000L), ("update-stage-003.tmp", 33_000_000L)),
+            CreateReadmePreviewItem(
+                "error-reports", "Informes de errores", "Informes locales de errores de Windows.",
+                @"C:\Holgura Demo\Informes", ModuleCategory.System, SafetyLevel.Review, now,
+                ("application-crash-006.dmp", 220_000_000L), ("diagnostic-report-017.wer", 60_000_000L)),
+        };
+
+        Items.Clear();
+        foreach (var item in previewItems.OrderByDescending(item => item.TotalBytes))
+        {
+            Items.Add(new ScanItemViewModel(item, RequestSelectionUpdate));
+        }
+
+        _scanTimestamp = now;
+        CurrentItem = Items.FirstOrDefault();
+        TotalText = SizeFormatter.Format(previewItems.Sum(item => item.TotalBytes));
+        TotalFilesText = $"{previewItems.Sum(item => item.FileCount):N0} archivos revisados en {previewItems.Length:N0} zonas";
+        LastScanText = "Vista previa con datos de ejemplo";
+        WarningText = string.Empty;
+        OperationSummary = "Datos de demostración · las acciones de limpieza están deshabilitadas.";
+        StatusText = "Vista previa para documentación. No se han leído ni borrado archivos.";
+        SelectNone();
+        if (CurrentItem?.Files.FirstOrDefault() is { } sampleFile)
+        {
+            sampleFile.IsSelected = true;
+        }
+    }
+
+    private static ScanItem CreateReadmePreviewItem(
+        string id,
+        string title,
+        string description,
+        string rootPath,
+        ModuleCategory category,
+        SafetyLevel safetyLevel,
+        DateTime timestampUtc,
+        params (string Name, long Length)[] files)
+    {
+        var entries = files.Select((file, index) => new FileEntry(
+            Path.Combine(rootPath, file.Name),
+            file.Length,
+            timestampUtc.AddDays(-index - 2))).ToArray();
+        return new ScanItem
+        {
+            Id = id,
+            ModuleId = id,
+            Title = title,
+            Description = description,
+            Category = category,
+            SafetyLevel = safetyLevel,
+            RootPath = rootPath,
+            FileCount = entries.Length,
+            TotalBytes = entries.Sum(entry => entry.Length),
+            LastWriteUtc = entries.Max(entry => entry.LastWriteUtc),
+            SampleFiles = entries.Select(entry => entry.FullName).ToArray(),
+            FileDetails = entries,
+        };
+    }
 
     private async Task ScanCoreAsync(CancellationToken cancellationToken)
     {

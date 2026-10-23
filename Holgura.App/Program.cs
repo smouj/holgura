@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 
 namespace Holgura.App;
@@ -6,8 +7,11 @@ namespace Holgura.App;
 internal static class Program
 {
     [STAThread]
-    private static void Main()
+    private static void Main(string[] args)
     {
+#if DEBUG
+        App.IsReadmeScreenshotMode = args.Contains("--capture-readme-screenshots", StringComparer.OrdinalIgnoreCase);
+#endif
         AppDomain.CurrentDomain.UnhandledException += (_, args) => App.Log("FATAL: " + args.ExceptionObject);
 
         try

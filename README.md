@@ -20,6 +20,18 @@
 
 ---
 
+## Vista previa
+
+Las capturas usan datos ficticios; las acciones de limpieza y desinstalación están deshabilitadas.
+
+<p align="center">
+  <img src="docs/screenshots/inicio.png" width="100%" alt="Inicio de Holgura con categorías y archivos ordenados por tamaño" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/aplicaciones.png" width="100%" alt="Lista de aplicaciones de ejemplo ordenada por tamaño" />
+</p>
+
 ## Por qué otro limpiador
 
 La mayoría pide confianza y devuelve una barra de progreso. Holgura devuelve la lista de archivos:
@@ -30,6 +42,7 @@ cada categoría, su tamaño, su ruta y el motivo por el que puede irse.
 - Los junctions y puntos de reanálisis no se siguen jamás.
 - Un archivo bloqueado se omite y se reporta; no es fatal.
 - Los grupos se muestran con tamaño, riesgo y número de archivos; puedes revisar y marcar varios archivos concretos.
+- Los archivos se ordenan por tamaño ascendente o descendente y por nombre; la lista de zonas prioriza las que ocupan más espacio.
 - **Simular** enseña el plan sin borrar nada; **Eliminar selección** pide confirmación y vuelve a comprobar cada archivo.
 - Project Infest queda protegido en el análisis y en la puerta de borrado; sus rutas y aplicaciones no se pueden seleccionar.
 - El panel muestra el espacio libre y usado de las unidades fijas disponibles.
@@ -56,11 +69,19 @@ alcanza los archivos visibles y compara tamaño y fecha con el análisis antes d
 
 La pestaña **Aplicaciones** lee las entradas de desinstalación de Windows para el equipo y el
 usuario actual, incluidas las vistas de registro de 32 y 64 bits. Muestra editor, versión, tamaño
-estimado y ruta de instalación cuando Windows los informa. La desinstalación abre el desinstalador
-oficial de cada programa con su interfaz normal; Holgura nunca borra manualmente una carpeta de
-programa. Los componentes del sistema se ocultan y las entradas de Project Infest quedan bloqueadas.
+estimado y ruta de instalación cuando Windows los informa. Puedes ordenar por tamaño o nombre y
+filtrar por nombre, editor o versión. Puedes seleccionar varias aplicaciones; Holgura abre sus
+desinstaladores oficiales uno a uno y te pide confirmar antes de continuar con el siguiente. La
+secuencia se puede detener, y Holgura nunca borra manualmente una carpeta de programa. Los
+componentes del sistema se ocultan y las entradas de Project Infest quedan bloqueadas.
 Los desinstaladores que dependen de scripts o intérpretes de comandos se bloquean por seguridad.
 Las aplicaciones de Microsoft Store se administran desde el botón que abre Configuración de Windows.
+
+## Ventana adaptable
+
+Holgura detecta el área útil del monitor donde se abre, centra la ventana dentro de ese espacio y
+ajusta sus límites para respetar la resolución, el escalado DPI y la barra de tareas. Al reducir
+la ventana, la navegación lateral se compacta y conserva sus iconos y descripciones emergentes.
 
 ### Lo que nunca toca
 
@@ -99,10 +120,14 @@ Liberar espacio dentro de una distro no encoge el VHDX. Compactarlo requiere `ws
 
 ## Instalación
 
-Portable: sin instalador, sin servicio, sin tarea programada.
+Holgura se publica como aplicación autocontenida: no tienes que instalar .NET por separado. El
+flujo de publicación prepara `Holgura-Setup-win-x64.exe`, una instalación para tu usuario que crea
+accesos en el menú Inicio y, por defecto, en el escritorio; al terminar puede abrir la app. El ZIP
+portable sigue disponible para quien prefiera descomprimir y ejecutar. La release 1.0.0 existente
+solo incluye el ZIP; las siguientes releases incluirán el instalador.
 
-1. Descarga `Holgura-win-x64.zip` desde [Releases](https://github.com/smouj/holgura/releases).
-2. Descomprime donde quieras y ejecuta `Holgura.App.exe`.
+1. Descarga `Holgura-Setup-win-x64.exe` desde [Releases](https://github.com/smouj/holgura/releases) e instala para tu usuario.
+2. Para la versión portable, descarga `Holgura-win-x64.zip`, descomprímelo donde quieras y ejecuta `Holgura.App.exe`.
 
 Diagnóstico en `%LOCALAPPDATA%\Holgura\app.log`.
 
@@ -126,7 +151,9 @@ Holgura.Core/                 PathSafetyValidator, exclusiones, historial, forma
 Holgura.Engine/               Pipeline de escaneo/limpieza, CleanupGate, módulos.
 Holgura.Platform.Windows/     Sistema de ficheros, puente WSL, papelera, rutas.
 Holgura.App/                  Shell de escritorio (WPF, MVVM), espacio y aplicaciones.
+installer/                    Instalador autocontenido por usuario para las releases.
 assets/                       Logos para tema claro/oscuro e icono de Windows.
+docs/screenshots/              Capturas de demostración con datos ficticios.
 tests/
   Holgura.Core.Tests/
   Holgura.Engine.Tests/

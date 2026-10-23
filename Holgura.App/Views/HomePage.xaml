@@ -53,10 +53,11 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="ESPACIO EN UNIDAD" Style="{StaticResource Kicker}" VerticalAlignment="Center" />
+                        <TextBlock Text="ESPACIO EN UNIDAD" Style="{StaticResource Kicker}" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" />
                         <ComboBox Grid.Column="1" ItemsSource="{Binding Drives}" SelectedItem="{Binding SelectedDrive}"
                                   DisplayMemberPath="Label" Style="{StaticResource CompactComboBox}"
-                                  MinWidth="112" ToolTip="Selecciona una unidad fija" />
+                                  MinWidth="88" ToolTip="Selecciona una unidad fija" />
                     </Grid>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,9,0,7">
                         <TextBlock Text="{Binding DriveFreeText}" Style="{StaticResource MetricValue}" />
@@ -115,8 +116,8 @@
                             <TextBlock Text="Zonas revisadas" Style="{StaticResource BodyStrong}" />
                             <TextBlock Text="Marca un grupo o abre sus archivos." Style="{StaticResource Tiny}" Margin="0,2,0,0" />
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Seleccionar zonas seguras" Style="{StaticResource LinkButton}"
-                                Click="OnSelectSafeZonesClick" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="Solo seguras" Style="{StaticResource LinkButton}"
+                                ToolTip="Seleccionar zonas seguras" Click="OnSelectSafeZonesClick" VerticalAlignment="Center" />
                     </Grid>
 
                     <Grid Grid.Row="1">
@@ -209,8 +210,19 @@
                         </StackPanel>
                     </Grid>
 
-                    <TextBlock Grid.Row="1" Text="{Binding CurrentItemPreviewText}" Style="{StaticResource Tiny}"
-                               Margin="0,5,0,8" TextTrimming="CharacterEllipsis" ToolTip="{Binding CurrentItemPreviewText}" />
+                    <Grid Grid.Row="1" Margin="0,5,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding CurrentItemPreviewText}" Style="{StaticResource Tiny}"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                   ToolTip="{Binding CurrentItemPreviewText}" />
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding FileSortModes}"
+                                  SelectedItem="{Binding FileSortMode, Mode=TwoWay}"
+                                  Style="{StaticResource CompactComboBox}" Width="164"
+                                  ToolTip="Ordenar los archivos visibles" />
+                    </Grid>
 
                     <Grid Grid.Row="2" Margin="0,0,0,5">
                         <Grid.ColumnDefinitions>

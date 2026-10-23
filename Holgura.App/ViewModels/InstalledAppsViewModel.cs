@@ -6,8 +6,16 @@ namespace Holgura.App.ViewModels;
 
 public sealed partial class InstalledAppsViewModel : ObservableObject
 {
+    private static readonly string[] ApplicationSortOptions =
+    [
+        "Tamaño: mayor a menor",
+        "Tamaño: menor a mayor",
+        "Nombre: A a Z",
+    ];
+
     private readonly InstalledAppsService _service;
     private readonly UninstallerService _uninstaller;
+    private bool _isReadmePreview;
 
     public InstalledAppsViewModel(InstalledAppsService service, UninstallerService uninstaller)
     {
@@ -19,16 +27,21 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     public ObservableCollection<InstalledApplicationViewModel> VisibleApplications { get; } = [];
 
+    public IReadOnlyList<string> SortModes => ApplicationSortOptions;
+
     [ObservableProperty]
     private bool _isBusy;
 
-    public bool CanRefresh => !IsBusy;
+    public bool CanRefresh => !IsBusy && !_isReadmePreview;
 
     [ObservableProperty]
     private string _statusText = "Actualiza la lista para detectar aplicaciones instaladas.";
 
     [ObservableProperty]
     private string _filterText = string.Empty;
+
+    [ObservableProperty]
+    private string _sortMode = ApplicationSortOptions[0];
 
     [ObservableProperty]
     private string _totalText = "—";
@@ -55,6 +68,8 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     partial void OnFilterTextChanged(string value) => ApplyFilter();
 
+    partial void OnSortModeChanged(string value) => ApplyFilter();
+
     partial void OnIsBusyChanged(bool value)
     {
         OnPropertyChanged(nameof(CanRefresh));
@@ -70,6 +85,11 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
+        if (_isReadmePreview)
+        {
+            return;
+        }
+
         if (IsBusy)
         {
             return;
@@ -110,24 +130,32 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
         }
     }
 
-    public string StartSelectedUninstaller()
+    public bool TryStartUninstaller(InstalledApplicationViewModel application, out string status)
     {
-        var selected = SelectedApplications;
-        if (selected.Count != 1 || !selected[0].CanSelect)
+        if (_isReadmePreview)
         {
-            return "Selecciona una aplicación con desinstalador disponible.";
+            status = "La vista previa usa datos de ejemplo y no permite desinstalar aplicaciones.";
+            return false;
+        }
+
+        if (application is null || !Applications.Contains(application) || !application.IsSelected || !application.CanSelect || IsBusy)
+        {
+            status = "La aplicación ya no está disponible para desinstalar. Actualiza la lista y vuelve a seleccionarla.";
+            return false;
         }
 
         try
         {
-            using var process = _uninstaller.Start(selected[0].Application);
-            StatusText = $"Se abrió el desinstalador oficial de {selected[0].DisplayName}. Sigue sus instrucciones.";
-            return StatusText;
+            using var process = _uninstaller.Start(application.Application);
+            status = $"Se abrió el desinstalador oficial de {application.DisplayName}. Sigue sus instrucciones.";
+            StatusText = status;
+            return true;
         }
         catch (Exception ex)
         {
-            StatusText = $"No se pudo iniciar el desinstalador: {ex.Message}";
-            return StatusText;
+            status = $"No se pudo iniciar el desinstalador de {application.DisplayName}: {ex.Message}";
+            StatusText = status;
+            return false;
         }
     }
 
@@ -141,15 +169,69 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
         UpdateSelection();
     }
 
+    internal void LoadReadmePreview()
+    {
+        _isReadmePreview = true;
+        OnPropertyChanged(nameof(CanRefresh));
+        Applications.Clear();
+        VisibleApplications.Clear();
+
+        var examples = new[]
+        {
+            new InstalledApplication(
+                "DEMO\\VideoEditor", "Editor de vídeo de ejemplo", "4.2", "Estudio de ejemplo",
+                @"C:\Holgura Demo\Apps\VideoEditor", string.Empty, 4_800L * 1024 * 1024,
+                "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
+            new InstalledApplication(
+                "DEMO\\PhotoViewer", "Visor de imágenes de ejemplo", "2.8", "Estudio de ejemplo",
+                @"C:\Holgura Demo\Apps\PhotoViewer", string.Empty, 1_240L * 1024 * 1024,
+                "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
+            new InstalledApplication(
+                "DEMO\\PuzzleGame", "Juego de ejemplo", "1.0", "Desarrollador de ejemplo",
+                @"C:\Holgura Demo\Apps\PuzzleGame", string.Empty, 620L * 1024 * 1024,
+                "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
+            new InstalledApplication(
+                "DEMO\\SmallTool", "Herramienta pequeña de ejemplo", "3.1", "Holgura Demo",
+                @"C:\Holgura Demo\Apps\SmallTool", string.Empty, 84L * 1024 * 1024,
+                "Ejemplo", false, false, "Deshabilitado en la vista de ejemplo"),
+        };
+
+        foreach (var application in examples)
+        {
+            Applications.Add(new InstalledApplicationViewModel(application, UpdateSelection));
+        }
+
+        TotalText = $"{Applications.Count:N0} aplicaciones de ejemplo";
+        StatusText = "Vista previa para documentación. Lista ficticia; desinstalación deshabilitada.";
+        FilterText = string.Empty;
+        SortMode = ApplicationSortOptions[0];
+        ApplyFilter();
+        CurrentApplication = VisibleApplications.FirstOrDefault();
+        UpdateSelection();
+    }
+
     private void ApplyFilter()
     {
         VisibleApplications.Clear();
         var query = FilterText.Trim();
-        foreach (var application in Applications.Where(application =>
+        var matchingApplications = Applications.Where(application =>
                      query.Length == 0 ||
                      application.DisplayName.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
                      application.PublisherText.Contains(query, StringComparison.CurrentCultureIgnoreCase) ||
-                     application.VersionText.Contains(query, StringComparison.CurrentCultureIgnoreCase)))
+                     application.VersionText.Contains(query, StringComparison.CurrentCultureIgnoreCase));
+        matchingApplications = SortMode switch
+        {
+            "Tamaño: menor a mayor" => matchingApplications
+                .OrderBy(application => application.Application.EstimatedSizeBytes ?? long.MaxValue)
+                .ThenBy(application => application.DisplayName, StringComparer.CurrentCultureIgnoreCase),
+            "Nombre: A a Z" => matchingApplications
+                .OrderBy(application => application.DisplayName, StringComparer.CurrentCultureIgnoreCase),
+            _ => matchingApplications
+                .OrderByDescending(application => application.Application.EstimatedSizeBytes ?? -1)
+                .ThenBy(application => application.DisplayName, StringComparer.CurrentCultureIgnoreCase),
+        };
+
+        foreach (var application in matchingApplications)
         {
             VisibleApplications.Add(application);
         }
@@ -169,10 +251,12 @@ public sealed partial class InstalledAppsViewModel : ObservableObject
         {
             0 => "Ninguna aplicación seleccionada",
             1 => $"1 aplicación · {selected[0].DisplayName}",
-            _ => $"{selected.Count:N0} seleccionadas · desinstala una a una para revisar cada asistente",
+            _ => $"{selected.Count:N0} seleccionadas · se abrirán una a una",
         };
-        CanUninstall = selected.Count == 1 && selected[0].CanSelect && !IsBusy;
-        UninstallButtonText = selected.Count > 1 ? "Elige una para desinstalar" : "Desinstalar aplicación";
+        CanUninstall = selected.Count > 0 && selected.All(application => application.CanSelect) && !IsBusy;
+        UninstallButtonText = selected.Count > 1
+            ? $"Desinstalar {selected.Count:N0} aplicaciones"
+            : "Desinstalar aplicación";
     }
 
     public string VisibleCountText => FilterText.Trim().Length == 0
