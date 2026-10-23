@@ -34,8 +34,8 @@ Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; Gr
 Source: "..\artifacts\win-x64\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\Holgura"; Filename: "{app}\Holgura.App.exe"
-Name: "{autodesktop}\Holgura"; Filename: "{app}\Holgura.App.exe"; Tasks: desktopicon
+Name: "{autoprograms}\Holgura"; Filename: "{app}\Holgura.App.exe"; IconFilename: "{app}\Holgura.App.exe"; IconIndex: 0
+Name: "{autodesktop}\Holgura"; Filename: "{app}\Holgura.App.exe"; IconFilename: "{app}\Holgura.App.exe"; IconIndex: 0; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\Holgura.App.exe"; Description: "Iniciar Holgura"; Flags: postinstall nowait skipifsilent
