@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" width="104" height="104" alt="Holgura" />
+  <img src="assets/logo.png" width="104" height="104" alt="Holgura" />
 </p>
 
 <h1 align="center">Holgura</h1>

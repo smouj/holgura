@@ -1,4 +1,5 @@
 using System.Windows;
+using Holgura.App.Services;
 using Holgura.App.Views;
 
 namespace Holgura.App;
@@ -8,6 +9,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ThemeService.Apply();
+        App.Log("App: theme and brand logo applied");
         App.Log("MainWindow: xaml loaded");
         NavFrame.Navigate(new HomePage());
         App.Log("MainWindow: navigated to HomePage, visible=" + IsVisible);

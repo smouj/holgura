@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 
 namespace Holgura.App.Services;
@@ -8,12 +9,19 @@ public static class ThemeService
 {
     public static void Apply()
     {
-        if (!IsSystemDark() || Application.Current is null)
+        if (Application.Current is null)
         {
             return;
         }
 
         var resources = Application.Current.Resources;
+        var isDark = IsSystemDark();
+        resources["BrandLogo"] = LoadLogo(isDark ? "logo-light.png" : "logo.png");
+        if (!isDark)
+        {
+            return;
+        }
+
         resources["AppBackground"] = Brush("#111214");
         resources["Surface"] = Brush("#18191C");
         resources["SurfaceAlt"] = Brush("#232529");
@@ -24,6 +32,17 @@ public static class ThemeService
         resources["Accent"] = Brush("#4C8DFF");
         resources["AccentHover"] = Brush("#6BA0FF");
         resources["AccentText"] = Brush("#0B0C0E");
+    }
+
+    private static BitmapImage LoadLogo(string assetName)
+    {
+        var image = new BitmapImage();
+        image.BeginInit();
+        image.UriSource = new Uri($"pack://application:,,,/Holgura.App;component/assets/{assetName}", UriKind.Absolute);
+        image.CacheOption = BitmapCacheOption.OnLoad;
+        image.EndInit();
+        image.Freeze();
+        return image;
     }
 
     private static SolidColorBrush Brush(string hex)

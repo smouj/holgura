@@ -16,8 +16,6 @@ public partial class App : Application
         Log("App: ctor begin");
         Services = AppServices.Create();
         Log("App: services created");
-        ThemeService.Apply();
-        Log("App: theme applied");
 
         DispatcherUnhandledException += (_, args) =>
         {

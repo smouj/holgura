@@ -7,6 +7,7 @@
     <RootNamespace>Holgura.App</RootNamespace>
     <AssemblyName>Holgura.App</AssemblyName>
     <StartupObject>Holgura.App.Program</StartupObject>
+    <ApplicationIcon>..\assets\holgura.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
@@ -15,6 +16,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="..\assets\logo.png" Link="Assets\logo.png" />
+    <Resource Include="..\assets\logo-light.png" Link="Assets\logo-light.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Holgura.Contracts\Holgura.Contracts.csproj" />
