@@ -1,6 +1,6 @@
 # Changelog
 
-## En desarrollo — 2026-10-23
+## 1.1.0 — 2026-10-23
 
 **Interfaz y análisis**
 - Panel de almacenamiento con capacidad, espacio libre y usado por unidad fija.
